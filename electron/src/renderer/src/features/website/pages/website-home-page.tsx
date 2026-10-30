@@ -25,13 +25,26 @@ import {
   stopAudioDemo,
   type DemoVoice,
 } from '@/features/portal/audio-demo-player';
+import { HeroInteractiveCanvas } from '../components/hero-interactive-canvas';
 
 export function WebsiteHomePage() {
   const [activeVoice, setActiveVoice] = useState<DemoVoice | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [playbackProgress, setPlaybackProgress] = useState(0);
   const [faqOpen, setFaqOpen] = useState<number | null>(0);
+  const [heroTilt, setHeroTilt] = useState({ x: 0, y: 0 });
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+
+  function handleHeroMouseMove(e: React.MouseEvent<HTMLDivElement>) {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / rect.width - 0.5;
+    const y = (e.clientY - rect.top) / rect.height - 0.5;
+    setHeroTilt({ x: x * 8, y: -y * 8 });
+  }
+
+  function handleHeroMouseLeave() {
+    setHeroTilt({ x: 0, y: 0 });
+  }
 
   // Audio visualizer animation
   useEffect(() => {
@@ -141,17 +154,31 @@ export function WebsiteHomePage() {
 
   return (
     <div className="space-y-24 pb-20">
-      {/* HERO SECTION */}
-      <section className="website-hero-glow relative overflow-hidden pt-20 pb-16">
-        <div className="mx-auto max-w-5xl px-4 text-center sm:px-6 lg:px-8">
-          <div className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-4 py-1.5 text-xs font-semibold text-primary">
-            <SparklesIcon className="size-3.5 animate-pulse" />
+      {/* HERO SECTION WITH INTERACTIVE MOUSE EFFECT */}
+      <section
+        onMouseMove={handleHeroMouseMove}
+        onMouseLeave={handleHeroMouseLeave}
+        className="website-hero-glow relative overflow-hidden pt-24 pb-20 min-h-[540px] flex items-center justify-center"
+      >
+        {/* Dynamic interactive mouse reactive neural canvas */}
+        <HeroInteractiveCanvas />
+
+        <div
+          className="mx-auto max-w-5xl px-4 text-center sm:px-6 lg:px-8 relative z-10 transition-transform duration-300 ease-out pointer-events-none"
+          style={{
+            transform: `perspective(1000px) rotateY(${heroTilt.x}deg) rotateX(${heroTilt.y}deg)`,
+          }}
+        >
+          <div className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-4 py-1.5 text-xs font-semibold text-primary backdrop-blur-md shadow-lg shadow-primary/10 pointer-events-auto">
+            <SparklesIcon className="size-3.5 animate-pulse text-cyan-400" />
             <span>The Independent, Local-First AI Voice Platform</span>
           </div>
 
-          <h1 className="mt-8 text-4xl font-extrabold tracking-tight text-foreground sm:text-6xl md:text-7xl">
+          <h1 className="mt-8 text-4xl font-extrabold tracking-tight text-foreground sm:text-6xl md:text-7xl select-none">
             Sovereign Voice AI <br className="hidden sm:inline" />
-            <span className="website-gradient-text">On Your Own Hardware</span>
+            <span className="website-gradient-text drop-shadow-[0_10px_25px_rgba(139,92,246,0.25)]">
+              On Your Own Hardware
+            </span>
           </h1>
 
           <p className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-muted-foreground sm:text-lg">
@@ -160,17 +187,17 @@ export function WebsiteHomePage() {
             lock-in.
           </p>
 
-          <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
+          <div className="mt-10 flex flex-wrap items-center justify-center gap-4 pointer-events-auto">
             <Link
               to="/download"
-              className="inline-flex h-12 items-center gap-2 rounded-xl bg-primary px-8 text-sm font-semibold text-primary-foreground shadow-xl shadow-primary/25 transition hover:opacity-95"
+              className="inline-flex h-12 items-center gap-2 rounded-xl bg-primary px-8 text-sm font-semibold text-primary-foreground shadow-xl shadow-primary/25 transition hover:scale-105 hover:opacity-95 active:scale-95"
             >
               <DownloadIcon className="size-4" />
               Download Free (v0.1.0)
             </Link>
             <Link
               to="/features"
-              className="inline-flex h-12 items-center gap-2 rounded-xl border border-border/80 bg-card/60 px-8 text-sm font-semibold text-foreground backdrop-blur transition hover:bg-muted"
+              className="inline-flex h-12 items-center gap-2 rounded-xl border border-border/80 bg-card/60 px-8 text-sm font-semibold text-foreground backdrop-blur-md transition hover:bg-muted hover:scale-105 active:scale-95"
             >
               Explore Features
               <ArrowRightIcon className="size-4 text-muted-foreground" />
