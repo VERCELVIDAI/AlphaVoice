@@ -21,8 +21,29 @@ logger = logging.getLogger("alphavoice.website")
 
 router = APIRouter(prefix="/api/website", tags=["website"])
 
-# Secret key for signing customer tokens
-_TOKEN_SECRET = os.environ.get("ALPHAVOICE_TOKEN_SECRET", secrets.token_hex(32))
+# Secret key for signing customer tokens with database persistence
+def _resolve_token_secret() -> str:
+    env_val = os.environ.get("ALPHAVOICE_TOKEN_SECRET", "").strip()
+    if env_val:
+        return env_val
+    try:
+        with db_conn() as conn:
+            row = conn.execute("SELECT content_json FROM website_content WHERE key = '_sys_token_secret'").fetchone()
+            if row and row[0]:
+                data = json.loads(row[0])
+                if data.get("secret"):
+                    return str(data["secret"])
+            generated = secrets.token_hex(32)
+            now = time.time()
+            conn.execute(
+                "INSERT OR REPLACE INTO website_content (key, title, content_json, updated_at) VALUES ('_sys_token_secret', 'Token Secret', ?, ?)",
+                (json.dumps({"secret": generated}), now),
+            )
+            return generated
+    except Exception:
+        return "alphavoice-default-persistent-signing-secret-2026"
+
+_TOKEN_SECRET = _resolve_token_secret()
 
 
 def _hash_password(password: str, salt: Optional[str] = None) -> str:
@@ -159,6 +180,13 @@ class CheckoutRequest(BaseModel):
     payment_method: str = "card"
 
 
+class TrackDownloadRequest(BaseModel):
+    platform: str
+    version: str = "0.1.0"
+    file_name: Optional[str] = ""
+    user_id: Optional[str] = None
+
+
 class SupportInquiryRequest(BaseModel):
     name: str
     email: str
@@ -260,6 +288,7 @@ def reset_password(req: ResetPasswordRequest):
 
 
 @router.get("/auth/me")
+@router.get("/customer/profile")
 def get_me(user: dict[str, Any] = Depends(get_current_user)):
     user_id = user["id"]
     with db_conn() as conn:
@@ -408,7 +437,7 @@ def get_latest_release():
 
 
 @router.post("/downloads/track")
-def track_download(platform: str, version: str = "0.1.0", request: Request = None, user_id: Optional[str] = None):
+def track_download(req: TrackDownloadRequest, request: Request = None):
     now = time.time()
     dl_id = str(uuid.uuid4())
     client_ip = request.client.host if request and request.client else "unknown"
@@ -417,7 +446,7 @@ def track_download(platform: str, version: str = "0.1.0", request: Request = Non
         conn.execute(
             """INSERT INTO website_downloads_log (id, user_id, os_platform, version, ip_address, downloaded_at)
                VALUES (?, ?, ?, ?, ?, ?)""",
-            (dl_id, user_id, platform.lower()[:32], version[:32], client_ip, now),
+            (dl_id, req.user_id, req.platform.lower()[:32], req.version[:32], client_ip, now),
         )
     return {"status": "ok", "download_id": dl_id}
 

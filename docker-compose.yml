@@ -1,0 +1,30 @@
+# ──────────────────────────────────────────────────────────────
+#  AlphaVoice Studio — Production Docker Compose
+#  Quick start:
+#    docker compose up --build
+# ──────────────────────────────────────────────────────────────
+
+services:
+  alphavoice:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: alphavoice-studio:latest
+    container_name: alphavoice-studio
+    ports:
+      - "3900:3900"
+    volumes:
+      - alphavoice-data:/app/omnivoice_data
+    environment:
+      - HF_HOME=/app/omnivoice_data/huggingface
+      - HF_TOKEN=${HF_TOKEN:-}
+      - OMNIVOICE_DATA_DIR=/app/omnivoice_data
+      - PYTHONPATH=/app/backend
+      - PYTHONUNBUFFERED=1
+      - OMNIVOICE_SERVER_MODE=1
+      - ALPHAVOICE_TOKEN_SECRET=${ALPHAVOICE_TOKEN_SECRET:-}
+      - OMNIVOICE_API_KEY=${OMNIVOICE_API_KEY:-}
+    restart: unless-stopped
+
+volumes:
+  alphavoice-data:

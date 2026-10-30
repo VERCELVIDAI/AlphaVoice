@@ -900,7 +900,32 @@ def _phase_a_finalize() -> None:
             def _index_html():
                 return _index_with_api_base()
 
-        app.mount("/", StaticFiles(directory=_frontend_path, html=True), name="frontend")
+        from starlette.exceptions import HTTPException as StarletteHTTPException
+
+        class SPAStaticFiles(StaticFiles):
+            """SPA static file handler that serves client-side routes via index.html."""
+
+            async def get_response(self, path: str, scope):
+                clean_path = path.replace("\\", "/").lstrip("/")
+                try:
+                    response = await super().get_response(path, scope)
+                except StarletteHTTPException as ex:
+                    if ex.status_code == 404 and scope.get("method") in ("GET", "HEAD"):
+                        if ("." in clean_path and not clean_path.endswith(".html")) or clean_path.startswith("api/") or clean_path.startswith("system/"):
+                            raise
+                        if _public_api_base and os.path.isfile(_index_path):
+                            return _index_with_api_base()
+                        return await super().get_response("index.html", scope)
+                    raise
+                if response.status_code == 404 and scope.get("method") in ("GET", "HEAD"):
+                    if ("." in clean_path and not clean_path.endswith(".html")) or clean_path.startswith("api/") or clean_path.startswith("system/"):
+                        return response
+                    if _public_api_base and os.path.isfile(_index_path):
+                        return _index_with_api_base()
+                    return await super().get_response("index.html", scope)
+                return response
+
+        app.mount("/", SPAStaticFiles(directory=_frontend_path, html=True), name="frontend")
     else:
 
         logging.getLogger("omnivoice.api").info(
@@ -1735,6 +1760,28 @@ async def global_exception_handler(request: Request, exc: Exception):
 
 _SHELL_PATHS = {"/", "/index.html", "/favicon.ico", "/early-error-capture.js", "/health"}
 
+_PUBLIC_PAGES = {
+    "/website",
+    "/features",
+    "/pricing",
+    "/download",
+    "/docs",
+    "/about",
+    "/contact",
+    "/login",
+    "/register",
+    "/forgot-password",
+    "/account",
+    "/admin/website",
+}
+
+_PUBLIC_PREFIXES = (
+    "/assets/",
+    "/favicon",
+    "/social/",
+    "/api/website/",
+)
+
 
 def _is_public_path(path: str) -> bool:
     """HTTP paths every gate leaves reachable: the SPA shell and its assets,
@@ -1742,8 +1789,8 @@ def _is_public_path(path: str) -> bool:
     exchange, which validates the presented key itself."""
     return (
         path in _SHELL_PATHS
-        or path.startswith("/assets/")
-        or path.startswith("/favicon")
+        or path in _PUBLIC_PAGES
+        or any(path.startswith(prefix) for prefix in _PUBLIC_PREFIXES)
         or path == "/api/auth/session"
     )
 
