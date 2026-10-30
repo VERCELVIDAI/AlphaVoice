@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { getWebsiteApiUrl } from '@/lib/store/website-auth-store';
 
 export function WebsiteContactPage() {
   const [name, setName] = useState('');
@@ -30,7 +31,7 @@ export function WebsiteContactPage() {
     setErrorMsg(null);
 
     try {
-      const res = await fetch('/api/website/support/inquire', {
+      const res = await fetch(getWebsiteApiUrl('/api/website/support/inquire'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, email, subject, message }),

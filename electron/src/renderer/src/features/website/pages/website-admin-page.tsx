@@ -13,7 +13,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { useWebsiteAuth } from '@/lib/store/website-auth-store';
+import { useWebsiteAuth, getWebsiteApiUrl, getWebsiteToken } from '@/lib/store/website-auth-store';
 
 interface AdminStats {
   total_users: number;
@@ -59,16 +59,16 @@ export function WebsiteAdminPage() {
 
   async function loadAdminData() {
     setLoading(true);
-    const token = localStorage.getItem('alphavoice.website_token');
+    const token = getWebsiteToken() || localStorage.getItem('alphavoice.website_token');
     const headers = { Authorization: `Bearer ${token}` };
 
     try {
       const [resStats, resUsers, resInq, resPur, resRel] = await Promise.all([
-        fetch('/api/website/admin/stats', { headers }).then((r) => (r.ok ? r.json() : null)),
-        fetch('/api/website/admin/users', { headers }).then((r) => (r.ok ? r.json() : [])),
-        fetch('/api/website/admin/inquiries', { headers }).then((r) => (r.ok ? r.json() : [])),
-        fetch('/api/website/admin/purchases', { headers }).then((r) => (r.ok ? r.json() : [])),
-        fetch('/api/website/admin/releases', { headers }).then((r) => (r.ok ? r.json() : [])),
+        fetch(getWebsiteApiUrl('/api/website/admin/stats'), { headers }).then((r) => (r.ok ? r.json() : null)),
+        fetch(getWebsiteApiUrl('/api/website/admin/users'), { headers }).then((r) => (r.ok ? r.json() : [])),
+        fetch(getWebsiteApiUrl('/api/website/admin/inquiries'), { headers }).then((r) => (r.ok ? r.json() : [])),
+        fetch(getWebsiteApiUrl('/api/website/admin/purchases'), { headers }).then((r) => (r.ok ? r.json() : [])),
+        fetch(getWebsiteApiUrl('/api/website/admin/releases'), { headers }).then((r) => (r.ok ? r.json() : [])),
       ]);
 
       if (resStats) setStats(resStats);
@@ -84,8 +84,8 @@ export function WebsiteAdminPage() {
   }
 
   async function handleUpdateInquiryStatus(id: string, newStatus: string) {
-    const token = localStorage.getItem('alphavoice.website_token');
-    await fetch(`/api/website/admin/inquiries/${id}?status=${newStatus}`, {
+    const token = getWebsiteToken() || localStorage.getItem('alphavoice.website_token');
+    await fetch(getWebsiteApiUrl(`/api/website/admin/inquiries/${id}?status=${newStatus}`), {
       method: 'PUT',
       headers: { Authorization: `Bearer ${token}` },
     });
@@ -94,11 +94,11 @@ export function WebsiteAdminPage() {
 
   async function handlePublishRelease(e: React.FormEvent) {
     e.preventDefault();
-    const token = localStorage.getItem('alphavoice.website_token');
+    const token = getWebsiteToken() || localStorage.getItem('alphavoice.website_token');
     setRelPublishFeedback(null);
 
     try {
-      const res = await fetch('/api/website/admin/releases', {
+      const res = await fetch(getWebsiteApiUrl('/api/website/admin/releases'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

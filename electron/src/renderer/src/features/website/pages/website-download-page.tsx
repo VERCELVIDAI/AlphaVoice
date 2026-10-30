@@ -10,7 +10,7 @@ import {
   TerminalIcon,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useWebsiteAuth } from '@/lib/store/website-auth-store';
+import { useWebsiteAuth, getWebsiteApiUrl, getWebsiteToken } from '@/lib/store/website-auth-store';
 import { useCommercialLicense } from '@/lib/store/license-store';
 
 interface ReleaseData {
@@ -68,7 +68,7 @@ export function WebsiteDownloadPage() {
     else if (userAgent.includes('linux')) setDetectedOs('linux');
 
     // Fetch live release metadata
-    void fetch('/api/website/releases/latest')
+    void fetch(getWebsiteApiUrl('/api/website/releases/latest'))
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
         if (data) setRelease(data);
@@ -79,7 +79,7 @@ export function WebsiteDownloadPage() {
   // Check download access on backend
   useEffect(() => {
     let isMounted = true;
-    const sessionToken = token || localStorage.getItem('alphavoice.website_session_token');
+    const sessionToken = token || getWebsiteToken() || localStorage.getItem('alphavoice.website_session_token');
 
     async function verifyAccess() {
       setCheckingAccess(true);
@@ -101,7 +101,7 @@ export function WebsiteDownloadPage() {
           headers['Authorization'] = `Bearer ${sessionToken}`;
         }
 
-        const res = await fetch('/api/website/downloads/check-access', { headers });
+        const res = await fetch(getWebsiteApiUrl('/api/website/downloads/check-access'), { headers });
         if (res.ok) {
           const data = (await res.json()) as AccessStatus;
           if (isMounted) {
@@ -158,16 +158,16 @@ export function WebsiteDownloadPage() {
       return;
     }
 
-    const sessionToken = token || localStorage.getItem('alphavoice.website_session_token');
+    const sessionToken = token || getWebsiteToken() || localStorage.getItem('alphavoice.website_session_token');
     try {
       // Record download analytics
-      void fetch(`/api/website/downloads/track?platform=${platform}&version=${release.version}`, {
+      void fetch(getWebsiteApiUrl(`/api/website/downloads/track?platform=${platform}&version=${release.version}`), {
         method: 'POST',
       }).catch(() => {});
 
       // Call secure endpoint
       if (sessionToken) {
-        const secRes = await fetch(`/api/website/downloads/secure?platform=${platform}`, {
+        const secRes = await fetch(getWebsiteApiUrl(`/api/website/downloads/secure?platform=${platform}`), {
           headers: { Authorization: `Bearer ${sessionToken}` },
         });
         if (!secRes.ok && secRes.status === 403) {

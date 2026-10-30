@@ -10,7 +10,7 @@ import {
 import { brandIcon } from '@/lib/brand';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { setWebsiteSession, useWebsiteAuth } from '@/lib/store/website-auth-store';
+import { getWebsiteApiUrl, setWebsiteSession, useWebsiteAuth } from '@/lib/store/website-auth-store';
 
 interface AuthPageProps {
   initialMode?: 'login' | 'register' | 'forgot';
@@ -62,7 +62,7 @@ export function WebsiteAuthPage({ initialMode = 'login' }: AuthPageProps) {
     setErrorMsg(null);
 
     try {
-      const res = await fetch('/api/website/auth/login', {
+      const res = await fetch(getWebsiteApiUrl('/api/website/auth/login'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
@@ -88,7 +88,7 @@ export function WebsiteAuthPage({ initialMode = 'login' }: AuthPageProps) {
     setErrorMsg(null);
 
     try {
-      const res = await fetch('/api/website/auth/register', {
+      const res = await fetch(getWebsiteApiUrl('/api/website/auth/register'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password, full_name: fullName, company }),
@@ -114,7 +114,7 @@ export function WebsiteAuthPage({ initialMode = 'login' }: AuthPageProps) {
     setErrorMsg(null);
 
     try {
-      const res = await fetch('/api/website/auth/forgot-password', {
+      const res = await fetch(getWebsiteApiUrl('/api/website/auth/forgot-password'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email }),
@@ -139,7 +139,7 @@ export function WebsiteAuthPage({ initialMode = 'login' }: AuthPageProps) {
     setErrorMsg(null);
 
     try {
-      const res = await fetch('/api/website/auth/reset-password', {
+      const res = await fetch(getWebsiteApiUrl('/api/website/auth/reset-password'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ token: resetToken, new_password: newPassword }),

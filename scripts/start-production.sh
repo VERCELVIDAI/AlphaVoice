@@ -4,7 +4,7 @@ set -euo pipefail
 # Ensure frontend build exists
 if [ ! -f "frontend/dist/index.html" ]; then
     echo "==> Building AlphaVoice Web Frontend..."
-    bun run --cwd electron build:web
+    node scripts/build-web.mjs
 fi
 
 PORT="${PORT:-${OMNIVOICE_PORT:-3900}}"

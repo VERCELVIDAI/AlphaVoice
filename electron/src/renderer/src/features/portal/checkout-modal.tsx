@@ -17,6 +17,7 @@ import {
   saveActiveLicense,
   type CommercialLicense,
 } from '@/lib/store/license-store';
+import { getWebsiteApiUrl, getWebsiteToken } from '@/lib/store/website-auth-store';
 
 export interface CheckoutPlan {
   id: string; // '6months' | '1year' | '2years' | 'custom' | 'yearly' | 'lifetime' | 'enterprise'
@@ -94,9 +95,9 @@ export function CheckoutModal({ plan, onClose, onSuccess }: CheckoutModalProps) 
 
     // Call backend API if user is authenticated or store session
     try {
-      const token = localStorage.getItem('alphavoice.website_session_token');
+      const token = getWebsiteToken() || localStorage.getItem('alphavoice.website_session_token');
       if (token) {
-        await fetch('/api/website/customer/checkout', {
+        await fetch(getWebsiteApiUrl('/api/website/customer/checkout'), {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

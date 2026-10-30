@@ -1,6 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "bun run build:web || npm run build:web",
+  "buildCommand": "node scripts/build-web.mjs",
   "outputDirectory": "frontend/dist",
   "cleanUrls": false,
   "rewrites": [

@@ -14,6 +14,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
   fetchCustomerData,
+  getWebsiteApiUrl,
+  getWebsiteToken,
   useWebsiteAuth,
   type CustomerDashboardData,
 } from '@/lib/store/website-auth-store';
@@ -83,9 +85,9 @@ export function WebsiteAccountPage() {
     setProfileSaving(true);
     setProfileFeedback(null);
 
-    const token = localStorage.getItem('alphavoice.website_token');
+    const token = getWebsiteToken() || localStorage.getItem('alphavoice.website_token');
     try {
-      const res = await fetch('/api/website/customer/profile', {
+      const res = await fetch(getWebsiteApiUrl('/api/website/customer/profile'), {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

@@ -2,7 +2,7 @@ $ErrorActionPreference = "Stop"
 
 if (-not (Test-Path "frontend/dist/index.html")) {
     Write-Host "==> Building AlphaVoice Web Frontend..."
-    bun run --cwd electron build:web
+    node scripts/build-web.mjs
 }
 
 $port = if ($env:PORT) { $env:PORT } elseif ($env:OMNIVOICE_PORT) { $env:OMNIVOICE_PORT } else { "3900" }
