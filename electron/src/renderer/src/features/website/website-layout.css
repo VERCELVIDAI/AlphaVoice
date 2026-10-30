@@ -1,0 +1,48 @@
+.website-root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans, system-ui, -apple-system, sans-serif);
+  scroll-behavior: smooth;
+  overflow-x: hidden;
+}
+
+.website-nav-blur {
+  background: color-mix(in oklch, var(--background) 85%, transparent);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.website-hero-glow {
+  background: radial-gradient(
+    circle at 50% -10%,
+    oklch(0.65 0.21 276 / 22%) 0%,
+    oklch(0.6 0.18 220 / 10%) 35%,
+    transparent 70%
+  );
+}
+
+.website-card {
+  background: color-mix(in oklch, var(--card) 75%, transparent);
+  border: 1px solid color-mix(in oklch, var(--border) 60%, transparent);
+  backdrop-filter: blur(12px);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.website-card:hover {
+  border-color: oklch(0.65 0.21 276 / 50%);
+  transform: translateY(-2px);
+  box-shadow: 0 16px 36px -12px oklch(0.65 0.21 276 / 20%);
+}
+
+.website-gradient-text {
+  background: linear-gradient(135deg, var(--foreground) 30%, oklch(0.65 0.21 276) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.website-code-pill {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}

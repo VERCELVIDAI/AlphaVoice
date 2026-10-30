@@ -54,6 +54,17 @@ const SettingsPage = lazyRouteComponent(
 );
 const ProPage = lazyRouteComponent(() => import('@/features/pro/pro-page'), 'ProPage');
 const PortalPage = lazyRouteComponent(() => import('@/features/portal/portal-page'), 'PortalPage');
+const PublicHomePage = lazyRouteComponent(() => import('@/features/website/website-routes'), 'PublicHomePage');
+const PublicFeaturesPage = lazyRouteComponent(() => import('@/features/website/website-routes'), 'PublicFeaturesPage');
+const PublicPricingPage = lazyRouteComponent(() => import('@/features/website/website-routes'), 'PublicPricingPage');
+const PublicDownloadPage = lazyRouteComponent(() => import('@/features/website/website-routes'), 'PublicDownloadPage');
+const PublicDocsPage = lazyRouteComponent(() => import('@/features/website/website-routes'), 'PublicDocsPage');
+const PublicAboutPage = lazyRouteComponent(() => import('@/features/website/website-routes'), 'PublicAboutPage');
+const PublicLoginPage = lazyRouteComponent(() => import('@/features/website/website-routes'), 'PublicLoginPage');
+const PublicRegisterPage = lazyRouteComponent(() => import('@/features/website/website-routes'), 'PublicRegisterPage');
+const PublicForgotPage = lazyRouteComponent(() => import('@/features/website/website-routes'), 'PublicForgotPage');
+const PublicAccountPage = lazyRouteComponent(() => import('@/features/website/website-routes'), 'PublicAccountPage');
+const PublicAdminPage = lazyRouteComponent(() => import('@/features/website/website-routes'), 'PublicAdminPage');
 
 export const rootRoute = createRootRoute({ component: AppShell });
 
@@ -273,7 +284,62 @@ export const storeRoute = createRoute({
 export const downloadRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/download',
-  component: PortalPage,
+  component: PublicDownloadPage,
+});
+export const websiteHomeRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/website',
+  component: PublicHomePage,
+});
+export const featuresRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/features',
+  component: PublicFeaturesPage,
+});
+export const pricingRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/pricing',
+  component: PublicPricingPage,
+});
+export const docsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/docs',
+  component: PublicDocsPage,
+});
+export const aboutRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/about',
+  component: PublicAboutPage,
+});
+export const contactRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/contact',
+  component: PublicAboutPage,
+});
+export const loginRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/login',
+  component: PublicLoginPage,
+});
+export const registerRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/register',
+  component: PublicRegisterPage,
+});
+export const forgotPasswordRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/forgot-password',
+  component: PublicForgotPage,
+});
+export const accountPortalRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/account',
+  component: PublicAccountPage,
+});
+export const adminWebsiteRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/admin/website',
+  component: PublicAdminPage,
 });
 export const updatesRoute = createRoute({
   getParentRoute: () => rootRoute,
@@ -299,6 +365,17 @@ export const routeTree = rootRoute.addChildren([
   portalRoute,
   storeRoute,
   downloadRoute,
+  websiteHomeRoute,
+  featuresRoute,
+  pricingRoute,
+  docsRoute,
+  aboutRoute,
+  contactRoute,
+  loginRoute,
+  registerRoute,
+  forgotPasswordRoute,
+  accountPortalRoute,
+  adminWebsiteRoute,
   storageRoute,
   privacyRoute,
   accountRoute,

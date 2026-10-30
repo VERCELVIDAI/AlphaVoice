@@ -340,6 +340,96 @@ _BASE_SCHEMA = """
         origin TEXT NOT NULL,
         meta_json TEXT NOT NULL DEFAULT '{}'
     );
+
+    CREATE TABLE IF NOT EXISTS website_users (
+        id TEXT PRIMARY KEY,
+        email TEXT UNIQUE NOT NULL,
+        password_hash TEXT NOT NULL,
+        full_name TEXT NOT NULL,
+        company TEXT DEFAULT '',
+        role TEXT DEFAULT 'customer',
+        created_at REAL NOT NULL,
+        updated_at REAL NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_website_users_email ON website_users(email);
+
+    CREATE TABLE IF NOT EXISTS website_subscriptions (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL,
+        plan_id TEXT NOT NULL,
+        plan_name TEXT NOT NULL,
+        billing_cycle TEXT NOT NULL,
+        amount REAL NOT NULL,
+        status TEXT NOT NULL,
+        current_period_end REAL,
+        created_at REAL NOT NULL,
+        FOREIGN KEY (user_id) REFERENCES website_users(id)
+    );
+    CREATE INDEX IF NOT EXISTS idx_website_subs_user ON website_subscriptions(user_id);
+
+    CREATE TABLE IF NOT EXISTS website_purchases (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL,
+        invoice_number TEXT NOT NULL,
+        plan_name TEXT NOT NULL,
+        amount REAL NOT NULL,
+        currency TEXT DEFAULT 'USD',
+        payment_method TEXT NOT NULL,
+        status TEXT NOT NULL,
+        created_at REAL NOT NULL,
+        FOREIGN KEY (user_id) REFERENCES website_users(id)
+    );
+    CREATE INDEX IF NOT EXISTS idx_website_purchases_user ON website_purchases(user_id);
+
+    CREATE TABLE IF NOT EXISTS website_user_licenses (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL,
+        license_key TEXT UNIQUE NOT NULL,
+        plan_id TEXT NOT NULL,
+        seats INTEGER DEFAULT 1,
+        status TEXT DEFAULT 'active',
+        issued_at REAL NOT NULL,
+        expires_at REAL,
+        FOREIGN KEY (user_id) REFERENCES website_users(id)
+    );
+    CREATE INDEX IF NOT EXISTS idx_website_lic_key ON website_user_licenses(license_key);
+
+    CREATE TABLE IF NOT EXISTS website_downloads_log (
+        id TEXT PRIMARY KEY,
+        user_id TEXT,
+        os_platform TEXT NOT NULL,
+        version TEXT NOT NULL,
+        ip_address TEXT DEFAULT '',
+        downloaded_at REAL NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS website_support_inquiries (
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        email TEXT NOT NULL,
+        subject TEXT NOT NULL,
+        message TEXT NOT NULL,
+        status TEXT DEFAULT 'new',
+        created_at REAL NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS website_releases (
+        id TEXT PRIMARY KEY,
+        version TEXT NOT NULL,
+        release_date TEXT NOT NULL,
+        windows_url TEXT NOT NULL,
+        macos_url TEXT NOT NULL,
+        linux_url TEXT NOT NULL,
+        changelog_markdown TEXT NOT NULL,
+        is_latest INTEGER DEFAULT 0,
+        created_at REAL NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS website_content (
+        key TEXT PRIMARY KEY,
+        value_json TEXT NOT NULL,
+        updated_at REAL NOT NULL
+    );
 """
 
 # Only tables/columns this module is allowed to ALTER. Prevents SQL injection via

@@ -805,6 +805,7 @@ def _phase_a_build_inner() -> None:
     from api.routers import telephony_twilio as _telephony_twilio_router  # noqa: E402
     from api.routers import calls as _calls_router  # noqa: E402
     from api.routers import cloud_sync as _cloud_sync_router  # noqa: E402
+    from api.routers import website as _website_router  # noqa: E402
     _router_modules.extend([
         system, profiles, profile_images, exports, generation, voice_convert, dub_core, dub_generate,
         dub_export, dub_translate, projects, glossary, engines, tools,
@@ -813,7 +814,7 @@ def _phase_a_build_inner() -> None:
         openai_compat, tts_stream, marketplace, personas, sonitranslate,
         audiobook, longform_jobs, pronunciation, settings_router,
         media_tools_router, auth_router, _mcp_bindings_router,
-        _telephony_twilio_router, _calls_router, _cloud_sync_router,
+        _telephony_twilio_router, _calls_router, _cloud_sync_router, _website_router,
     ])
     # Download-acceleration state, once, for triage-from-logs (FDL-03).
     try:
