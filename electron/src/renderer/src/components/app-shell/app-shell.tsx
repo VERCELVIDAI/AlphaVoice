@@ -16,6 +16,29 @@ export function AppShell() {
   const pathname = useRouterState({
     select: (state) => state.location.pathname,
   });
+
+  const isWebsiteRoute =
+    pathname === '/'
+      ? __WEB_DEPLOYMENT__
+      : (
+          pathname === '/website' ||
+          pathname.startsWith('/features') ||
+          pathname.startsWith('/pricing') ||
+          pathname.startsWith('/download') ||
+          pathname.startsWith('/docs') ||
+          pathname.startsWith('/about') ||
+          pathname.startsWith('/contact') ||
+          pathname.startsWith('/login') ||
+          pathname.startsWith('/register') ||
+          pathname.startsWith('/forgot-password') ||
+          pathname.startsWith('/account') ||
+          pathname.startsWith('/admin/website')
+        );
+
+  if (isWebsiteRoute) {
+    return <Outlet />;
+  }
+
   const shellOnly = pathname.startsWith('/settings') || pathname === '/pro';
   // Settings pads its own header (account-corner-safe); every other page, /pro
   // included, gets the shared clearance so its search button never sits under

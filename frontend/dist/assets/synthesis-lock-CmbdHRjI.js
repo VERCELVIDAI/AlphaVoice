@@ -1,0 +1,1 @@
+var e=null;function t(){if(e)return null;let t=Symbol();return e=t,()=>{e===t&&(e=null)}}export{t};

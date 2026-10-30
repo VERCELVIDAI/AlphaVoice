@@ -11,7 +11,23 @@ type AuthMode = 'apikey' | 'pin';
 
 export function WebAuthGate({ children }: { children: ReactNode }) {
   const { t } = useTranslation();
-  const [checked, setChecked] = useState(!__WEB_DEPLOYMENT__);
+  const isPublicRoute =
+    typeof window !== 'undefined' &&
+    (window.location.pathname === '/' ||
+      window.location.pathname === '/website' ||
+      window.location.pathname.startsWith('/features') ||
+      window.location.pathname.startsWith('/pricing') ||
+      window.location.pathname.startsWith('/download') ||
+      window.location.pathname.startsWith('/docs') ||
+      window.location.pathname.startsWith('/about') ||
+      window.location.pathname.startsWith('/contact') ||
+      window.location.pathname.startsWith('/login') ||
+      window.location.pathname.startsWith('/register') ||
+      window.location.pathname.startsWith('/forgot-password') ||
+      window.location.pathname.startsWith('/account') ||
+      window.location.pathname.startsWith('/admin/website'));
+
+  const [checked, setChecked] = useState(!__WEB_DEPLOYMENT__ || isPublicRoute);
   const [mode, setMode] = useState<AuthMode | null>(null);
   const [value, setValue] = useState('');
   const [pending, setPending] = useState(false);
@@ -19,7 +35,7 @@ export function WebAuthGate({ children }: { children: ReactNode }) {
   const submitting = useRef(false);
 
   useEffect(() => {
-    if (!__WEB_DEPLOYMENT__) return;
+    if (!__WEB_DEPLOYMENT__ || isPublicRoute) return;
     const required = (event: Event) => {
       const detail = (event as CustomEvent<{ mode?: string }>).detail;
       setMode(detail?.mode === 'apikey' ? 'apikey' : 'pin');
@@ -37,6 +53,8 @@ export function WebAuthGate({ children }: { children: ReactNode }) {
       });
     return () => window.removeEventListener('ov:auth-required', required);
   }, []);
+
+  if (isPublicRoute) return <>{children}</>;
 
   if (!checked) {
     return (

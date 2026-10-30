@@ -1,8 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "bun run --cwd electron build:web",
   "outputDirectory": "frontend/dist",
-  "framework": "vite",
   "cleanUrls": true,
   "rewrites": [
     {

@@ -11,8 +11,11 @@ __pycache__/
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
-dist/
+/dist/
+electron/dist/
+out/
 build/
+!frontend/dist/
 .playwright-mcp
 
 # ─────────────────────────────────────────────────────────────────────────

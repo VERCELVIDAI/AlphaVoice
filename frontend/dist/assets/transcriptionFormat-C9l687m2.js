@@ -1,0 +1,5 @@
+function e(e){let t=e=>typeof e==`number`&&Number.isFinite(e),n=t(e?.start)?`${e.start.toFixed(1)}s`:null,r=t(e?.end)?`${e.end.toFixed(1)}s`:null;return n&&r?`${n} – ${r}`:n||r||``}function t(e){return e?.refined_text?.trim()||e?.text||``}function n(e){let t=Array.isArray(e?.segments)?e.segments:[];if(!t.some(e=>e?.speaker))return null;let n=[];for(let e of t){let t=(e?.text||``).trim();if(!t)continue;let r=n[n.length-1];r&&r.speaker===e.speaker?r.text+=` ${t}`:n.push({speaker:e.speaker,text:t})}return n.map(e=>e.speaker?`${e.speaker}: ${e.text}`:e.text).join(`
+`)}function r(e){return e.map(e=>{let r=new Date(e.timestamp),i=Number.isFinite(r.getTime())?r.toLocaleString():``,a=n(e),o=a?e.refined_text?.trim()?`${t(e)}\n\n${a}`:a:t(e);return`[${i}] (${e.language||``})\n${o}\n`}).join(`
+---
+
+`)}export{t as n,e as r,r as t};

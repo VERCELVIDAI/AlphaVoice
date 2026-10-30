@@ -57,6 +57,18 @@ export interface CustomerDashboardData {
   downloads: WebsiteDownloadRecord[];
 }
 
+export function getWebsiteApiUrl(path: string): string {
+  const envBase = typeof import.meta !== 'undefined' && import.meta.env?.VITE_PUBLIC_API_BASE;
+  const win = typeof window !== 'undefined' ? (window as { __OMNIVOICE_API_BASE__?: string }) : undefined;
+  const base = envBase || win?.__OMNIVOICE_API_BASE__ || '';
+  if (base) {
+    const cleanBase = String(base).trim().replace(/\/+$/, '');
+    const cleanPath = path.startsWith('/') ? path : `/${path}`;
+    return `${cleanBase}${cleanPath}`;
+  }
+  return path;
+}
+
 const TOKEN_KEY = 'alphavoice.website_token';
 const USER_KEY = 'alphavoice.website_user';
 const EVENT_NAME = 'alphavoice:website_auth_changed';
@@ -95,7 +107,7 @@ export async function fetchCustomerData(): Promise<CustomerDashboardData | null>
   if (!token) return null;
 
   try {
-    const res = await fetch('/api/website/auth/me', {
+    const res = await fetch(getWebsiteApiUrl('/api/website/auth/me'), {
       headers: {
         Authorization: `Bearer ${token}`,
       },

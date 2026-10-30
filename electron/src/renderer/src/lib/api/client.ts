@@ -27,9 +27,12 @@ export function resolveApiBase(
   dev: boolean,
   win?: ApiBaseWindow,
 ): string {
-  if (!webDeployment || dev) return "/api";
+  const envBase = typeof import.meta !== 'undefined' && import.meta.env?.VITE_PUBLIC_API_BASE;
+  if (envBase) return String(envBase).trim().replace(/\/+$/, '');
   const runtime = win?.__OMNIVOICE_API_BASE__?.trim();
-  return runtime ? runtime.replace(/\/+$/, "") : "";
+  if (runtime) return runtime.replace(/\/+$/, '');
+  if (!webDeployment || dev) return "/api";
+  return "";
 }
 
 export const API_BASE = resolveApiBase(

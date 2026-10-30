@@ -1,0 +1,1 @@
+function e(e){try{return typeof URL.createObjectURL==`function`?URL.createObjectURL(e):null}catch{return null}}function t(e){if(e)try{URL.revokeObjectURL(e)}catch{}}export{t as n,e as t};

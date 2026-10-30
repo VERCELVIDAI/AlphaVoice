@@ -1,0 +1,1 @@
+function e(e){return e===`stories`?{importText:``,lines:[]}:{script:``}}function t(e,t){if(e===`audiobook`)return Number(!!t.script.trim());let n=!!t.importText?.trim();return t.lines.length+Number(n)}export{t as n,e as t};

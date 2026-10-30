@@ -68,9 +68,17 @@ const PublicAdminPage = lazyRouteComponent(() => import('@/features/website/webs
 
 export const rootRoute = createRootRoute({ component: AppShell });
 
+const RootIndexComponent = __WEB_DEPLOYMENT__ ? PublicHomePage : HomePage;
+
 export const indexRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/',
+  component: RootIndexComponent,
+});
+
+export const studioRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/studio',
   component: HomePage,
 });
 
@@ -389,6 +397,7 @@ export const routeTree = rootRoute.addChildren([
   audiobookRoute,
   projectsRoute,
   indexRoute,
+  studioRoute,
   cloneRoute,
   savedVoicesRoute,
   pronunciationRoute,
