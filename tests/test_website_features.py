@@ -130,9 +130,142 @@ def test_admin_stats_and_management(client):
     assert isinstance(inq_res.json(), list)
 
 
+def test_timeline_plans_and_gst_checkout(client):
+    import time
+    unique_email = f"gst_client_{int(time.time() * 1000)}@alphavoice.test"
+    reg = client.post(
+        "/api/website/auth/register",
+        json={
+            "email": unique_email,
+            "password": "GstPassword123!",
+            "full_name": "Studio Director",
+            "company": "Cinematic Audio Studio",
+        },
+    ).json()
+    token = reg["token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    # 1. Test 6-Month Plan (₹17,000 + 18% GST = ₹20,060)
+    res_6m = client.post(
+        "/api/website/customer/checkout",
+        headers=headers,
+        json={
+            "plan_id": "6months",
+            "plan_name": "AlphaVoice 6 Months Commercial License",
+            "amount": 20060.0,
+            "base_amount": 17000.0,
+            "gst_amount": 3060.0,
+            "currency": "INR",
+            "billing_cycle": "6months",
+            "duration_months": 6,
+            "seats": 1,
+            "payment_method": "upi",
+            "gstin": "07AAAAA0000A1Z5",
+        },
+    )
+    assert res_6m.status_code == 200
+    data_6m = res_6m.json()
+    assert data_6m["status"] == "success"
+    assert data_6m["license_key"].startswith("ALPHA-6M-")
+    assert data_6m["currency"] == "INR"
+    assert data_6m["duration_months"] == 6
+
+    # 2. Test Custom Duration (e.g. 5 Months)
+    res_custom = client.post(
+        "/api/website/customer/checkout",
+        headers=headers,
+        json={
+            "plan_id": "custom",
+            "plan_name": "AlphaVoice 5 Months Custom License",
+            "amount": 17700.0,
+            "base_amount": 15000.0,
+            "gst_amount": 2700.0,
+            "currency": "INR",
+            "billing_cycle": "custom",
+            "duration_months": 5,
+            "seats": 1,
+            "payment_method": "card",
+        },
+    )
+    assert res_custom.status_code == 200
+    data_custom = res_custom.json()
+    assert data_custom["status"] == "success"
+    assert data_custom["license_key"].startswith("ALPHA-5M-")
+    assert data_custom["duration_months"] == 5
+
+
+def test_download_security_and_license_gating(client):
+    import time
+    # 1. Unauthenticated access check -> has_access: False
+    check_unauth = client.get("/api/website/downloads/check-access").json()
+    assert check_unauth["has_access"] is False
+    assert check_unauth["authenticated"] is False
+
+    # 2. Secure download without auth -> 401
+    sec_unauth = client.get("/api/website/downloads/secure?platform=windows")
+    assert sec_unauth.status_code == 401
+
+    # 3. New registered user without paid license -> has_access: False, secure download 403
+    unpaid_email = f"unpaid_{int(time.time() * 1000)}@alphavoice.test"
+    reg = client.post(
+        "/api/website/auth/register",
+        json={"email": unpaid_email, "password": "Password123!", "full_name": "Unpaid Visitor"},
+    ).json()
+    token = reg["token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    check_unpaid = client.get("/api/website/downloads/check-access", headers=headers).json()
+    assert check_unpaid["has_access"] is False
+    assert check_unpaid["authenticated"] is True
+
+    sec_unpaid = client.get("/api/website/downloads/secure?platform=windows", headers=headers)
+    assert sec_unpaid.status_code == 403
+    assert "Active commercial license required" in sec_unpaid.json()["detail"]
+
+    # 4. User purchases 1 Year Commercial License -> has_access: True, secure download authorized
+    client.post(
+        "/api/website/customer/checkout",
+        headers=headers,
+        json={
+            "plan_id": "1year",
+            "plan_name": "AlphaVoice 1 Year Commercial License",
+            "amount": 35400.0,
+            "base_amount": 30000.0,
+            "gst_amount": 5400.0,
+            "currency": "INR",
+            "billing_cycle": "1year",
+            "duration_months": 12,
+            "seats": 1,
+            "payment_method": "netbanking",
+        },
+    )
+
+    check_paid = client.get("/api/website/downloads/check-access", headers=headers).json()
+    assert check_paid["has_access"] is True
+    assert check_paid["license_key"].startswith("ALPHA-12M-")
+
+    sec_paid = client.get("/api/website/downloads/secure?platform=windows", headers=headers)
+    assert sec_paid.status_code == 200
+    assert sec_paid.json()["status"] == "authorized"
+    assert "AlphaVoice-Setup" in sec_paid.json()["download_url"]
+
+
 def test_spa_client_side_routing_fallback(client):
-    # Direct GET to public pages should return HTML with 200 OK
-    for path in ["/features", "/pricing", "/download", "/account", "/docs", "/about"]:
+    # Direct GET to public pages and newly built legal pages should return HTML with 200 OK
+    for path in [
+        "/features",
+        "/pricing",
+        "/download",
+        "/account",
+        "/docs",
+        "/about",
+        "/contact",
+        "/terms",
+        "/privacy",
+        "/refund-policy",
+        "/delivery-policy",
+        "/license-agreement",
+    ]:
         res = client.get(path)
         assert res.status_code == 200
         assert "text/html" in res.headers.get("content-type", "")

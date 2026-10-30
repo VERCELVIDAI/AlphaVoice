@@ -2,12 +2,18 @@ import { useEffect, useState } from 'react';
 
 export interface CommercialLicense {
   key: string;
-  plan: 'pro_yearly' | 'pro_lifetime' | 'enterprise';
+  plan: 'pro_6months' | 'pro_1year' | 'pro_2years' | 'pro_custom' | 'pro_yearly' | 'pro_lifetime' | 'enterprise';
   planName: string;
   seats: number;
+  durationMonths?: number;
+  baseAmount?: number;
+  gstAmount?: number;
+  totalAmount?: number;
+  currency?: string;
   customerName: string;
   customerEmail: string;
   companyName?: string;
+  gstin?: string;
   issuedAt: string;
   expiresAt: string | null;
   status: 'active' | 'expired' | 'revoked';
@@ -19,13 +25,13 @@ const STORAGE_KEY = 'alphavoice.commercial_license';
 const EVENT_NAME = 'alphavoice:license_changed';
 
 /** Generate a realistic, cryptographically styled commercial license key */
-export function generateLicenseKey(plan: 'yearly' | 'lifetime' | 'enterprise'): string {
+export function generateLicenseKey(plan: string, durationMonths = 6): string {
   const prefix =
     plan === 'lifetime'
       ? 'ALPHA-LIFE'
       : plan === 'enterprise'
         ? 'ALPHA-ENT'
-        : 'ALPHA-PRO';
+        : `ALPHA-${durationMonths}M`;
   const year = new Date().getFullYear();
   const randBlock = () =>
     Math.random().toString(36).substring(2, 6).toUpperCase();

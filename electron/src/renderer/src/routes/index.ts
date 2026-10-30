@@ -60,6 +60,12 @@ const PublicPricingPage = lazyRouteComponent(() => import('@/features/website/we
 const PublicDownloadPage = lazyRouteComponent(() => import('@/features/website/website-routes'), 'PublicDownloadPage');
 const PublicDocsPage = lazyRouteComponent(() => import('@/features/website/website-routes'), 'PublicDocsPage');
 const PublicAboutPage = lazyRouteComponent(() => import('@/features/website/website-routes'), 'PublicAboutPage');
+const PublicContactPage = lazyRouteComponent(() => import('@/features/website/website-routes'), 'PublicContactPage');
+const PublicTermsPage = lazyRouteComponent(() => import('@/features/website/website-routes'), 'PublicTermsPage');
+const PublicPrivacyPage = lazyRouteComponent(() => import('@/features/website/website-routes'), 'PublicPrivacyPage');
+const PublicRefundPage = lazyRouteComponent(() => import('@/features/website/website-routes'), 'PublicRefundPage');
+const PublicDeliveryPage = lazyRouteComponent(() => import('@/features/website/website-routes'), 'PublicDeliveryPage');
+const PublicLicensePage = lazyRouteComponent(() => import('@/features/website/website-routes'), 'PublicLicensePage');
 const PublicLoginPage = lazyRouteComponent(() => import('@/features/website/website-routes'), 'PublicLoginPage');
 const PublicRegisterPage = lazyRouteComponent(() => import('@/features/website/website-routes'), 'PublicRegisterPage');
 const PublicForgotPage = lazyRouteComponent(() => import('@/features/website/website-routes'), 'PublicForgotPage');
@@ -322,7 +328,32 @@ export const aboutRoute = createRoute({
 export const contactRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/contact',
-  component: PublicAboutPage,
+  component: PublicContactPage,
+});
+export const termsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/terms',
+  component: PublicTermsPage,
+});
+export const websitePrivacyRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/privacy',
+  component: PublicPrivacyPage,
+});
+export const refundRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/refund-policy',
+  component: PublicRefundPage,
+});
+export const deliveryRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/delivery-policy',
+  component: PublicDeliveryPage,
+});
+export const licenseAgreementRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/license-agreement',
+  component: PublicLicensePage,
 });
 export const loginRoute = createRoute({
   getParentRoute: () => rootRoute,
@@ -379,6 +410,11 @@ export const routeTree = rootRoute.addChildren([
   docsRoute,
   aboutRoute,
   contactRoute,
+  termsRoute,
+  websitePrivacyRoute,
+  refundRoute,
+  deliveryRoute,
+  licenseAgreementRoute,
   loginRoute,
   registerRoute,
   forgotPasswordRoute,

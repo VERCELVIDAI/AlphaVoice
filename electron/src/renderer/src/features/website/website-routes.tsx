@@ -8,6 +8,12 @@ import { WebsiteAboutContactPage } from './pages/website-about-contact-page';
 import { WebsiteAuthPage } from './pages/website-auth-page';
 import { WebsiteAccountPage } from './pages/website-account-page';
 import { WebsiteAdminPage } from './pages/website-admin-page';
+import { WebsiteTermsPage } from './pages/website-terms-page';
+import { WebsitePrivacyPage } from './pages/website-privacy-page';
+import { WebsiteRefundPage } from './pages/website-refund-page';
+import { WebsiteDeliveryPage } from './pages/website-delivery-page';
+import { WebsiteLicensePage } from './pages/website-license-page';
+import { WebsiteContactPage } from './pages/website-contact-page';
 
 export function PublicHomePage() {
   return (
@@ -53,6 +59,54 @@ export function PublicAboutPage() {
   return (
     <WebsiteLayout>
       <WebsiteAboutContactPage />
+    </WebsiteLayout>
+  );
+}
+
+export function PublicContactPage() {
+  return (
+    <WebsiteLayout>
+      <WebsiteContactPage />
+    </WebsiteLayout>
+  );
+}
+
+export function PublicTermsPage() {
+  return (
+    <WebsiteLayout>
+      <WebsiteTermsPage />
+    </WebsiteLayout>
+  );
+}
+
+export function PublicPrivacyPage() {
+  return (
+    <WebsiteLayout>
+      <WebsitePrivacyPage />
+    </WebsiteLayout>
+  );
+}
+
+export function PublicRefundPage() {
+  return (
+    <WebsiteLayout>
+      <WebsiteRefundPage />
+    </WebsiteLayout>
+  );
+}
+
+export function PublicDeliveryPage() {
+  return (
+    <WebsiteLayout>
+      <WebsiteDeliveryPage />
+    </WebsiteLayout>
+  );
+}
+
+export function PublicLicensePage() {
+  return (
+    <WebsiteLayout>
+      <WebsiteLicensePage />
     </WebsiteLayout>
   );
 }

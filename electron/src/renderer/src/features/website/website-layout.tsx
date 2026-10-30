@@ -168,7 +168,7 @@ export function WebsiteLayout({ children }: WebsiteLayoutProps) {
               className="inline-flex h-9 items-center gap-2 rounded-xl bg-primary px-4 text-xs font-semibold text-primary-foreground shadow-md shadow-primary/20 transition hover:opacity-90"
             >
               <DownloadIcon className="size-3.5" />
-              <span>Download Free</span>
+              <span>Download Studio</span>
             </Link>
           </div>
 
@@ -311,32 +311,34 @@ export function WebsiteLayout({ children }: WebsiteLayoutProps) {
                 <li><Link to="/docs" className="hover:text-foreground">Documentation</Link></li>
                 <li><Link to="/docs" className="hover:text-foreground">Local REST API</Link></li>
                 <li><Link to="/docs" className="hover:text-foreground">Model Context Protocol</Link></li>
-                <li><a href="https://github.com/alphavoice/AlphaVoice" target="_blank" rel="noopener noreferrer" className="hover:text-foreground">GitHub Repository</a></li>
+                <li><Link to="/license-agreement" className="hover:text-foreground">License Agreement (EULA)</Link></li>
                 <li><Link to="/download" className="hover:text-foreground">Release Notes</Link></li>
               </ul>
             </div>
 
-            {/* Company & Support Column */}
+            {/* Legal & Policies Column */}
             <div>
-              <h4 className="text-xs font-bold uppercase tracking-wider text-foreground">Company</h4>
+              <h4 className="text-xs font-bold uppercase tracking-wider text-foreground">Legal & Policies</h4>
               <ul className="mt-4 space-y-2.5 text-xs text-muted-foreground">
-                <li><Link to="/about" className="hover:text-foreground">About AlphaVoice</Link></li>
-                <li><Link to="/contact" className="hover:text-foreground">Contact & Support</Link></li>
-                <li><Link to="/account" className="hover:text-foreground">Customer Portal</Link></li>
-                <li><a href="https://alphavoice.studio/privacy" className="hover:text-foreground">Privacy Policy</a></li>
-                <li><a href="https://alphavoice.studio/terms" className="hover:text-foreground">Terms of Service</a></li>
+                <li><Link to="/terms" className="hover:text-foreground">Terms of Service</Link></li>
+                <li><Link to="/privacy" className="hover:text-foreground">Privacy Policy</Link></li>
+                <li><Link to="/refund-policy" className="hover:text-foreground">Refund Policy</Link></li>
+                <li><Link to="/delivery-policy" className="hover:text-foreground">Delivery Policy</Link></li>
+                <li><Link to="/license-agreement" className="hover:text-foreground">Commercial EULA</Link></li>
+                <li><Link to="/contact" className="hover:text-foreground">Support & Grievances</Link></li>
               </ul>
             </div>
           </div>
 
           <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-border/50 pt-8 sm:flex-row text-xs text-muted-foreground">
-            <p>&copy; {new Date().getFullYear()} AlphaVoice Technologies. All rights reserved.</p>
-            <div className="flex items-center gap-6">
+            <p>&copy; {new Date().getFullYear()} AlphaVoice Technologies. All rights reserved. GST Registered Entity.</p>
+            <div className="flex flex-wrap items-center gap-5">
               <Link to="/about" className="hover:text-foreground">About</Link>
+              <Link to="/pricing" className="hover:text-foreground">Pricing</Link>
+              <Link to="/terms" className="hover:text-foreground">Terms</Link>
+              <Link to="/privacy" className="hover:text-foreground">Privacy</Link>
+              <Link to="/refund-policy" className="hover:text-foreground">Refunds</Link>
               <Link to="/contact" className="hover:text-foreground">Contact</Link>
-              <a href="https://github.com/alphavoice/AlphaVoice" target="_blank" rel="noopener noreferrer" className="hover:text-foreground">
-                GitHub
-              </a>
             </div>
           </div>
         </div>

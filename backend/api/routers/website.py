@@ -172,12 +172,18 @@ class UpdateProfileRequest(BaseModel):
 
 
 class CheckoutRequest(BaseModel):
-    plan_id: Literal["free", "pro_monthly", "pro_yearly", "pro_lifetime", "enterprise"]
+    plan_id: str
     plan_name: str
     amount: float
-    billing_cycle: Literal["monthly", "yearly", "lifetime", "free"]
+    base_amount: Optional[float] = None
+    gst_amount: Optional[float] = None
+    currency: str = "INR"
+    billing_cycle: str = "6months"
+    duration_months: int = 6
     seats: int = 1
-    payment_method: str = "card"
+    payment_method: str = "upi"
+    gstin: Optional[str] = ""
+    company_name: Optional[str] = ""
 
 
 class TrackDownloadRequest(BaseModel):
@@ -321,8 +327,14 @@ def get_me(user: dict[str, Any] = Depends(get_current_user)):
             ).fetchall()
         ]
 
+    now = time.time()
+    active_sub = bool(sub_row and sub_row["status"] == "active" and (sub_row["current_period_end"] is None or sub_row["current_period_end"] > now))
+    active_lic = any(l["status"] == "active" and (l["expires_at"] is None or l["expires_at"] > now) for l in licenses)
+    has_active_license = bool(active_sub or active_lic or user.get("role") == "admin")
+
     return {
         "user": user,
+        "has_active_license": has_active_license,
         "subscription": dict(sub_row) if sub_row else None,
         "licenses": licenses,
         "purchases": purchases,
@@ -371,19 +383,32 @@ def process_checkout(req: CheckoutRequest, user: dict[str, Any] = Depends(get_cu
     license_id = str(uuid.uuid4())
     invoice_num = f"INV-ALPHA-{int(now)}-{secrets.token_hex(2).upper()}"
 
+    # Calculate expiration based on duration_months or cycle
+    months = max(1, req.duration_months)
+    if req.billing_cycle == "6months":
+        months = 6
+    elif req.billing_cycle in ("1year", "yearly"):
+        months = 12
+    elif req.billing_cycle == "2years":
+        months = 24
+
+    if req.billing_cycle == "lifetime":
+        prefix = "ALPHA-LIFE"
+        expires_at = None
+    else:
+        prefix = f"ALPHA-{months}M"
+        expires_at = now + (months * 30.5 * 24 * 3600)
+
     # Generate cryptographic license key
-    prefix = "ALPHA-LIFE" if req.billing_cycle == "lifetime" else "ALPHA-PRO"
     rand_blk = lambda: secrets.token_hex(2).upper()
     license_key = f"{prefix}-2026-{rand_blk()}-{rand_blk()}-{rand_blk()}"
-
-    expires_at = None if req.billing_cycle == "lifetime" else (now + (365 * 24 * 3600 if req.billing_cycle == "yearly" else 30 * 24 * 3600))
 
     with db_conn() as conn:
         # Record purchase
         conn.execute(
             """INSERT INTO website_purchases (id, user_id, invoice_number, plan_name, amount, currency, payment_method, status, created_at)
-               VALUES (?, ?, ?, ?, ?, 'USD', ?, 'completed', ?)""",
-            (purchase_id, user_id, invoice_num, req.plan_name, req.amount, req.payment_method, now),
+               VALUES (?, ?, ?, ?, ?, ?, ?, 'completed', ?)""",
+            (purchase_id, user_id, invoice_num, req.plan_name, req.amount, req.currency, req.payment_method, now),
         )
 
         # Update or record subscription
@@ -406,6 +431,8 @@ def process_checkout(req: CheckoutRequest, user: dict[str, Any] = Depends(get_cu
         "license_key": license_key,
         "plan_name": req.plan_name,
         "amount": req.amount,
+        "currency": req.currency,
+        "duration_months": months,
         "expires_at": expires_at,
     }
 
@@ -422,9 +449,9 @@ def get_latest_release():
     return {
         "version": "0.1.0",
         "release_date": "October 2026",
-        "windows_url": "https://github.com/alphavoice/AlphaVoice/releases/download/v0.1.0/AlphaVoice-Setup-0.1.0.exe",
-        "macos_url": "https://github.com/alphavoice/AlphaVoice/releases/download/v0.1.0/AlphaVoice-0.1.0-arm64.dmg",
-        "linux_url": "https://github.com/alphavoice/AlphaVoice/releases/download/v0.1.0/AlphaVoice-0.1.0.AppImage",
+        "windows_url": "https://download.alphavoice.studio/releases/v0.1.0/AlphaVoice-Setup-0.1.0.exe",
+        "macos_url": "https://download.alphavoice.studio/releases/v0.1.0/AlphaVoice-0.1.0-arm64.dmg",
+        "linux_url": "https://download.alphavoice.studio/releases/v0.1.0/AlphaVoice-0.1.0.AppImage",
         "changelog_markdown": """### AlphaVoice Studio v0.1.0 Initial Production Release
 - 40+ Pre-bundled local neural voice synthesis and cloning models
 - Real-time WhisperX GPU-accelerated speech-to-text dictation
@@ -554,3 +581,98 @@ def create_admin_release(req: ReleaseCreateRequest, admin: dict[str, Any] = Depe
             (rel_id, req.version, req.release_date, req.windows_url, req.macos_url, req.linux_url, req.changelog_markdown, 1 if req.is_latest else 0, now),
         )
     return {"status": "ok", "release_id": rel_id}
+
+
+@router.get("/downloads/check-access")
+def check_download_access(authorization: Optional[str] = Header(None)):
+    """Check if the requesting user has an active commercial license to download files."""
+    if not authorization or not authorization.startswith("Bearer "):
+        return {
+            "has_access": False,
+            "authenticated": False,
+            "reason": "Authentication required. Please sign in to your commercial account.",
+        }
+
+    token = authorization.split(" ", 1)[1].strip()
+    payload = _verify_token(token)
+    if not payload:
+        return {
+            "has_access": False,
+            "authenticated": False,
+            "reason": "Session expired. Please log in again.",
+        }
+
+    user_id = payload["sub"]
+    now = time.time()
+    with db_conn() as conn:
+        sub = conn.execute(
+            """SELECT plan_name, current_period_end, status FROM website_subscriptions
+               WHERE user_id = ? AND status = 'active' AND (current_period_end IS NULL OR current_period_end > ?)
+               ORDER BY current_period_end DESC LIMIT 1""",
+            (user_id, now),
+        ).fetchone()
+
+        license_row = conn.execute(
+            """SELECT license_key, expires_at, status FROM website_user_licenses
+               WHERE user_id = ? AND status = 'active' AND (expires_at IS NULL OR expires_at > ?)
+               ORDER BY issued_at DESC LIMIT 1""",
+            (user_id, now),
+        ).fetchone()
+
+    if not sub and not license_row and payload.get("role") != "admin":
+        return {
+            "has_access": False,
+            "authenticated": True,
+            "reason": "Active commercial license required. Without payment, installer files cannot be accessed.",
+        }
+
+    expires_at = (sub["current_period_end"] if sub else None) or (license_row["expires_at"] if license_row else None)
+    return {
+        "has_access": True,
+        "authenticated": True,
+        "plan_name": sub["plan_name"] if sub else "Commercial License",
+        "license_key": license_row["license_key"] if license_row else "ALPHA-COMMERCIAL",
+        "expires_at": expires_at,
+    }
+
+
+@router.get("/downloads/secure")
+def secure_download(platform: str, user: dict[str, Any] = Depends(get_current_user)):
+    """Secure installer download link gated on active commercial license payment."""
+    user_id = user["id"]
+    now = time.time()
+
+    with db_conn() as conn:
+        active_sub = conn.execute(
+            """SELECT 1 FROM website_subscriptions
+               WHERE user_id = ? AND status = 'active' AND (current_period_end IS NULL OR current_period_end > ?)
+               LIMIT 1""",
+            (user_id, now),
+        ).fetchone()
+
+        active_lic = conn.execute(
+            """SELECT 1 FROM website_user_licenses
+               WHERE user_id = ? AND status = 'active' AND (expires_at IS NULL OR expires_at > ?)
+               LIMIT 1""",
+            (user_id, now),
+        ).fetchone()
+
+    if not active_sub and not active_lic and user.get("role") != "admin":
+        raise HTTPException(
+            status_code=403,
+            detail="Active commercial license required to download software installers. Please purchase a license to unlock downloads.",
+        )
+
+    base_cdn = "https://download.alphavoice.studio/releases/v0.1.0"
+    urls = {
+        "windows": f"{base_cdn}/AlphaVoice-Setup-0.1.0.exe",
+        "macos": f"{base_cdn}/AlphaVoice-0.1.0-arm64.dmg",
+        "linux": f"{base_cdn}/AlphaVoice-0.1.0.AppImage",
+    }
+    target_url = urls.get(platform.lower(), urls["windows"])
+    return {
+        "status": "authorized",
+        "platform": platform,
+        "download_url": target_url,
+        "expires_in_seconds": 3600,
+    }

@@ -38,9 +38,9 @@ export function WebsiteAdminPage() {
   // New release form
   const [relVersion, setRelVersion] = useState('0.1.1');
   const [relDate, setRelDate] = useState('November 2026');
-  const [relWinUrl, setRelWinUrl] = useState('https://github.com/alphavoice/AlphaVoice/releases/download/v0.1.1/AlphaVoice-Setup-0.1.1.exe');
-  const [relMacUrl, setRelMacUrl] = useState('https://github.com/alphavoice/AlphaVoice/releases/download/v0.1.1/AlphaVoice-0.1.1-arm64.dmg');
-  const [relLinUrl, setRelLinUrl] = useState('https://github.com/alphavoice/AlphaVoice/releases/download/v0.1.1/AlphaVoice-0.1.1.AppImage');
+  const [relWinUrl, setRelWinUrl] = useState('https://download.alphavoice.studio/releases/v0.1.1/AlphaVoice-Setup-0.1.1.exe');
+  const [relMacUrl, setRelMacUrl] = useState('https://download.alphavoice.studio/releases/v0.1.1/AlphaVoice-0.1.1-arm64.dmg');
+  const [relLinUrl, setRelLinUrl] = useState('https://download.alphavoice.studio/releases/v0.1.1/AlphaVoice-0.1.1.AppImage');
   const [relChangelog, setRelChangelog] = useState('### What is New in v0.1.1\n- Performance improvements and model updates.');
   const [relPublishFeedback, setRelPublishFeedback] = useState<string | null>(null);
 

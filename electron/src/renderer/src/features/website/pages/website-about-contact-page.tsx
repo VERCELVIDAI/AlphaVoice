@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from '@tanstack/react-router';
 import {
   CheckCircle2Icon,
   Code2Icon,
@@ -130,15 +131,13 @@ export function WebsiteAboutContactPage() {
                 <Code2Icon className="size-4" />
               </div>
               <div className="text-xs">
-                <div className="font-bold text-foreground">Open Source Repository</div>
-                <a
-                  href="https://github.com/alphavoice/AlphaVoice"
-                  target="_blank"
-                  rel="noopener noreferrer"
+                <div className="font-bold text-foreground">Developer Documentation</div>
+                <Link
+                  to="/docs"
                   className="text-primary hover:underline"
                 >
-                  github.com/alphavoice/AlphaVoice
-                </a>
+                  alphavoice.studio/docs
+                </Link>
               </div>
             </div>
           </div>
