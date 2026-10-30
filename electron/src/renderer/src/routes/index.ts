@@ -53,6 +53,7 @@ const SettingsPage = lazyRouteComponent(
   'SettingsPage',
 );
 const ProPage = lazyRouteComponent(() => import('@/features/pro/pro-page'), 'ProPage');
+const PortalPage = lazyRouteComponent(() => import('@/features/portal/portal-page'), 'PortalPage');
 
 export const rootRoute = createRootRoute({ component: AppShell });
 
@@ -259,6 +260,21 @@ export const proRoute = createRoute({
   path: '/pro',
   component: ProPage,
 });
+export const portalRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/portal',
+  component: PortalPage,
+});
+export const storeRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/store',
+  component: PortalPage,
+});
+export const downloadRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/download',
+  component: PortalPage,
+});
 export const updatesRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/settings/updates',
@@ -280,6 +296,9 @@ export const routeTree = rootRoute.addChildren([
   updatesRoute,
   supportRoute,
   proRoute,
+  portalRoute,
+  storeRoute,
+  downloadRoute,
   storageRoute,
   privacyRoute,
   accountRoute,

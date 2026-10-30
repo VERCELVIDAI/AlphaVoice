@@ -1,5 +1,6 @@
-import { AudioLinesIcon } from 'lucide-react';
+import { AudioLinesIcon, SparklesIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { Link } from '@tanstack/react-router';
 import { cn } from '@/lib/utils';
 import { appVersion, isMac } from '../bridge';
 import { ThemeToggle } from './theme-toggle';
@@ -29,7 +30,14 @@ export function TopBar() {
       <span className="hidden min-w-0 flex-1 truncate text-[11px] text-muted-foreground sm:block">
         {t('app.tagline')}
       </span>
-      <div className="ml-auto flex items-center gap-1">
+      <div className="ml-auto flex items-center gap-2">
+        <Link
+          to="/portal"
+          className="no-drag inline-flex items-center gap-1.5 rounded-full border border-primary/35 bg-primary/10 px-2.5 py-0.5 text-[11px] font-semibold text-primary transition hover:bg-primary/20 hover:border-primary/50"
+        >
+          <SparklesIcon className="size-3" />
+          <span>Download & Pricing</span>
+        </Link>
         <ThemeToggle />
       </div>
     </header>

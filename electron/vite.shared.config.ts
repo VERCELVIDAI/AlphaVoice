@@ -5,7 +5,7 @@ import react from '@vitejs/plugin-react';
 const nodeMajor = parseInt(process.versions.node?.split('.')[0] || '0', 10);
 const nodeExecArgv = nodeMajor >= 22 ? ['--no-experimental-webstorage'] : [];
 
-export default defineConfig({
+export default (defineConfig as any)({
   plugins: [react()],
   resolve: {
     alias: {
