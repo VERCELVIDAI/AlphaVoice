@@ -169,8 +169,8 @@ export function WebsiteHomePage() {
             transform: `perspective(1000px) rotateY(${heroTilt.x}deg) rotateX(${heroTilt.y}deg)`,
           }}
         >
-          <div className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-4 py-1.5 text-xs font-semibold text-primary backdrop-blur-md shadow-lg shadow-primary/10 pointer-events-auto">
-            <SparklesIcon className="size-3.5 animate-pulse text-cyan-400" />
+          <div className="inline-flex items-center gap-1.5 sm:gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 sm:px-4 sm:py-1.5 text-[11px] sm:text-xs font-semibold text-primary backdrop-blur-md shadow-lg shadow-primary/10 pointer-events-auto">
+            <SparklesIcon className="size-3 sm:size-3.5 animate-pulse text-cyan-400" />
             <span>The Independent, Local-First AI Voice Platform</span>
           </div>
 

@@ -40,16 +40,36 @@ export function WebsiteLayout({ children }: WebsiteLayoutProps) {
 
   return (
     <div className="website-root">
-      {/* Top Notification Bar */}
-      <div className="border-b border-primary/20 bg-primary/10 px-4 py-1.5 text-center text-xs font-medium text-foreground">
-        <span className="inline-flex items-center gap-1.5">
-          <SparklesIcon className="size-3 text-primary animate-pulse" />
-          <span>AlphaVoice Studio v0.1.0 Official Production Release is now live!</span>
-          <Link to="/download" className="ml-1.5 font-semibold text-primary underline underline-offset-2 hover:opacity-80">
-            Get Installer &rarr;
-          </Link>
-        </span>
-      </div>
+      {/* Top Announcement Bar - Ultra-mini on mobile, expanded on desktop */}
+      <aside
+        aria-label="Announcement"
+        className="border-b border-primary/20 bg-primary/10 px-3 py-1 sm:py-1.5 text-center text-[11px] sm:text-xs font-medium text-foreground transition-all"
+      >
+        <div className="mx-auto flex max-w-7xl items-center justify-center gap-1.5 sm:gap-2 truncate leading-tight">
+          <SparklesIcon className="size-2.5 sm:size-3 shrink-0 text-primary animate-pulse" />
+          {/* Mobile compact view */}
+          <span className="sm:hidden truncate">
+            <strong className="font-semibold text-primary">v0.1.0 live</strong>
+            <span className="mx-1 text-muted-foreground/60">·</span>
+            <Link
+              to="/download"
+              className="font-semibold text-foreground underline underline-offset-2 hover:text-primary"
+            >
+              Get Installer &rarr;
+            </Link>
+          </span>
+          {/* Desktop & tablet view */}
+          <span className="hidden sm:inline-flex items-center gap-1.5">
+            <span>AlphaVoice Studio v0.1.0 Official Production Release is now live!</span>
+            <Link
+              to="/download"
+              className="ml-1 font-semibold text-primary underline underline-offset-2 hover:opacity-80"
+            >
+              Get Installer &rarr;
+            </Link>
+          </span>
+        </div>
+      </aside>
 
       {/* Main SaaS Navbar */}
       <header className="website-nav-blur sticky top-0 z-40 border-b border-border/50">
