@@ -1,10 +1,11 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "bun run build:web || npm run build:web",
   "outputDirectory": "frontend/dist",
-  "cleanUrls": true,
+  "cleanUrls": false,
   "rewrites": [
     {
-      "source": "/(.*)",
+      "source": "/((?!assets/|favicon\\.svg|early-error-capture\\.js|.*\\.[\\w]+$).*)",
       "destination": "/index.html"
     }
   ],

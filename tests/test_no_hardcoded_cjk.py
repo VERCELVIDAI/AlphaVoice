@@ -38,6 +38,7 @@ _ALLOWED_PREFIXES = (
     "electron/src/renderer/src/i18n/",
     "docs/specs/",
     "docs/readme/",  # translated READMEs and their native language-switcher links
+    "frontend/dist/",  # Compiled web production distribution containing vendor/locale chunks
 )
 _ALLOWED_FILES = {
     "electron/src/main/blank-window-guard.ts",  # Matches localized window text.

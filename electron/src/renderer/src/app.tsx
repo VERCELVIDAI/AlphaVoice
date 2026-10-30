@@ -1,4 +1,3 @@
-import { NativeDictationSync } from '@/hooks/use-native-dictation';
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { GenerationProvider } from '@/hooks/use-generate';
@@ -9,49 +8,11 @@ import { TooltipProvider } from '@/components/ui/tooltip';
 import { queryClient } from '@/lib/query';
 import { router } from './router';
 import { ErrorBoundary } from '@/components/error-boundary';
-import { toast } from 'sonner';
 import { AnalyticsConsentBanner, AnalyticsRuntime } from '@/components/analytics-consent';
-import { GpuOfferBanner } from '@/components/gpu-offer';
-import { CloudSyncRuntime } from '@/features/account/cloud-sync-runtime';
 import { getBridge } from '@/components/bridge';
-import { FirstSoundHandoff } from '@/components/first-sound-handoff';
 import { stepAppearanceScale } from '@/hooks/use-appearance';
 import { recordRouteBreadcrumb } from '@/lib/report-breadcrumb';
-import { ModelInstallSync } from '@/hooks/use-model-install-sync';
-import { RealtimeEventSync } from '@/hooks/use-realtime-events';
-import { GenerateBudgetSync } from '@/hooks/use-generate-budget-sync';
 import { runRendererTask } from '@/lib/global-error-recovery';
-import { WebAuthGate } from '@/components/web-auth-gate';
-import { ModelLicenceGate } from '@/features/settings/model-licence-acceptance';
-
-const notifiedUpdates = new Set<string>();
-
-function UpdateNotifier() {
-  const { t } = useTranslation();
-  useEffect(() => {
-    const updates = getBridge()?.updates;
-    if (!updates) return;
-    return updates.onState((state) => {
-      if (
-        (state.status !== 'available' && state.status !== 'downloaded') ||
-        !state.availableVersion ||
-        notifiedUpdates.has(state.availableVersion)
-      )
-        return;
-      notifiedUpdates.add(state.availableVersion);
-      toast.info(t('update.toast_available', { version: state.availableVersion }), {
-        action: {
-          label: t('common.open'),
-          onClick: () =>
-            runRendererTask('Navigate to updates', () =>
-              router.navigate({ to: '/settings/updates' }),
-            ),
-        },
-      });
-    });
-  }, [t]);
-  return null;
-}
 
 export function App() {
   const { t } = useTranslation();
@@ -96,7 +57,7 @@ export function App() {
     if (!app) return;
     return app.onNavigate((path) => {
       if (path === '/settings')
-        runRendererTask('Native navigation to settings', () =>
+        runRendererTask('Navigate to settings', () =>
           router.navigate({ to: '/settings' }),
         );
     });
@@ -116,25 +77,14 @@ export function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <ErrorBoundary>
-        <WebAuthGate>
-          <NativeDictationSync />
-          <ModelInstallSync />
-          <RealtimeEventSync />
-          <GenerateBudgetSync />
-          <UpdateNotifier />
-          <AnalyticsRuntime />
-          <CloudSyncRuntime />
-          <AnalyticsConsentBanner />
-          <GpuOfferBanner />
-          <GenerationProvider>
-            <FirstSoundHandoff />
-            <TooltipProvider>
-              <RouterProvider router={router} />
-              <ModelLicenceGate />
-              <Toaster richColors position="bottom-right" />
-            </TooltipProvider>
-          </GenerationProvider>
-        </WebAuthGate>
+        <AnalyticsRuntime />
+        <AnalyticsConsentBanner />
+        <GenerationProvider>
+          <TooltipProvider>
+            <RouterProvider router={router} />
+            <Toaster richColors position="bottom-right" />
+          </TooltipProvider>
+        </GenerationProvider>
       </ErrorBoundary>
     </QueryClientProvider>
   );

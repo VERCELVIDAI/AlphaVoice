@@ -1517,7 +1517,15 @@ def prepare_deliberate_shutdown_during_startup(request: Request):
 
 
 @app.get("/docs", include_in_schema=False)
-async def scalar_docs():
+@app.get("/api/docs", include_in_schema=False)
+@app.get("/scalar", include_in_schema=False)
+async def scalar_docs(request: Request):
+    from core.spa_inject import frontend_dist_dir, frontend_available
+    dist_dir = frontend_dist_dir()
+    index_file = os.path.join(dist_dir, "index.html")
+    if request.url.path == "/docs" and not request.query_params.get("api") and frontend_available(dist_dir) and os.path.isfile(index_file):
+        from fastapi.responses import FileResponse
+        return FileResponse(index_file)
     """Interactive API documentation powered by Scalar."""
     if get_scalar_api_reference is None:
         return JSONResponse(
