@@ -1,6 +1,6 @@
 {
-  "productName": "VoiceStudio",
-  "appId": "com.voicestudio.desktop",
+  "productName": "AlphaVoice Studio",
+  "appId": "com.alphavoice.studio",
   "ports": {
     "backend": 3900,
     "web": 3901,

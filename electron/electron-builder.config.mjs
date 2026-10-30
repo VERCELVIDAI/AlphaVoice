@@ -40,7 +40,7 @@ if (
 ) {
   throw new Error(`Unsupported Electron update channel: ${updateChannel}`);
 }
-const updateUrl = 'https://github.com/debpalash/VoiceStudio/releases/latest/download';
+const updateUrl = 'https://github.com/alphavoice/AlphaVoice/releases/latest/download';
 
 export function distributionPackaging(target = DISTRIBUTION_TARGET) {
   if (target === 'snap-store') {
@@ -141,7 +141,7 @@ export default {
     voicestudioDistribution: DISTRIBUTION_TARGET,
     voicestudioUpdateOwner: DISTRIBUTION_PROFILE.applicationUpdates,
     ...(DISTRIBUTION_TARGET === 'microsoft-store'
-      ? { author: { name: storeIdentity.publisherLegalName, email: 'hi@voicestudio.sh' } }
+      ? { author: { name: storeIdentity.publisherLegalName, email: 'support@alphavoice.studio' } }
       : {}),
   },
   directories: { output: 'release', buildResources: 'build' },

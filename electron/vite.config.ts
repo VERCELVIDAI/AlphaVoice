@@ -1,23 +1,22 @@
-// Vite+ (`vp test` / `vp check`) config for the RENDERER unit tests only.
-// The Electron dev/build pipeline lives in electron.vite.config.ts.
 import { resolve } from 'node:path';
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import tailwindcss from '@tailwindcss/vite';
+
+const nodeMajor = parseInt(process.versions.node?.split('.')[0] || '0', 10);
+const nodeExecArgv = nodeMajor >= 22 ? ['--no-experimental-webstorage'] : [];
 
 export default defineConfig({
-  // `vp fmt` / `vp check` read Oxfmt settings from here, not from .oxfmtrc.json
-  // (kept in sync with it for editor integrations).
-  fmt: {
-    printWidth: 100,
-    singleQuote: true,
-    ignorePatterns: ['out/**', 'dist/**', 'release/**', 'src/renderer/src/components/ui/**'],
-  },
-  plugins: [react()],
+  plugins: [tailwindcss(), react()],
   define: {
-    __APP_VERSION__: JSON.stringify('0.0.0-test'),
-    __BUILD_COMMIT__: JSON.stringify('000000000'),
-    __DISTRIBUTION_TARGET__: JSON.stringify('direct'),
     __WEB_DEPLOYMENT__: false,
+    __APP_VERSION__: JSON.stringify('0.5.7'),
+    __BUILD_COMMIT__: JSON.stringify('local'),
+    __DISTRIBUTION_TARGET__: JSON.stringify('direct'),
+    __POSTHOG_PROJECT_TOKEN__: JSON.stringify(''),
+    __POSTHOG_HOST__: JSON.stringify(''),
+    __CLOUD_ACCOUNTS__: false,
+    __CLOUD_CLIENT_ID__: JSON.stringify(''),
   },
   resolve: {
     alias: {
@@ -32,9 +31,8 @@ export default defineConfig({
     environment: 'jsdom',
     globals: true,
     setupFiles: ['./src/renderer/src/test/setup.ts'],
-    // Node 25+ ships a global localStorage that is undefined without --localstorage-file
-    // and shadows jsdom's Storage; CI runs Node 22, where this flag is a no-op.
-    execArgv: ['--no-experimental-webstorage'],
+    // Node 22+ supports --no-experimental-webstorage; on Node 20 or lower it is not a valid flag.
+    execArgv: nodeExecArgv,
     // Shared release runners (Intel macOS, Windows ARM) run the suite many times slower
     // than a laptop; a real hang still fails, a busy runner no longer does.
     testTimeout: process.env.CI ? 30_000 : 5_000,

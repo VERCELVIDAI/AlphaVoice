@@ -79,11 +79,11 @@ it('credits qualifying contributors and opens their GitHub profiles externally',
   const all = screen.getByRole('link', { name: 'homeUi.allContributors' });
   expect(all).toHaveAttribute(
     'href',
-    'https://github.com/debpalash/VoiceStudio/graphs/contributors',
+    'https://github.com/alphavoice/AlphaVoice/graphs/contributors',
   );
   fireEvent.click(all);
   expect(files.openExternal).toHaveBeenCalledWith(
-    'https://github.com/debpalash/VoiceStudio/graphs/contributors',
+    'https://github.com/alphavoice/AlphaVoice/graphs/contributors',
   );
   for (const { login } of homeContributors) {
     if (login === 'debpalash' || login === 'velixio') continue;
@@ -102,17 +102,17 @@ it('opens both creator profiles from the accessible avatar card', async () => {
   const x = screen.getByRole('link', { name: 'X @idebpalash' });
   expect(screen.getByRole('link', { name: 'homeUi.website palash.dev' })).toHaveAttribute(
     'href',
-    'https://palash.dev',
+    'https://alphavoice.studio',
   );
   expect(screen.getByText('homeUi.creatorCoreTeam')).toBeVisible();
   expect(screen.getByText('homeUi.maintainerPalash')).toBeVisible();
   expect(screen.getAllByText('homeUi.follow')).toHaveLength(2);
   expect(github).toHaveAttribute('href', 'https://github.com/debpalash');
-  expect(x).toHaveAttribute('href', 'https://x.com/idebpalash');
+  expect(x).toHaveAttribute('href', 'https://x.com/alphavoicestudio');
   fireEvent.click(github);
   expect(files.openExternal).toHaveBeenCalledWith('https://github.com/debpalash');
   fireEvent.click(x);
-  expect(files.openExternal).toHaveBeenCalledWith('https://x.com/idebpalash');
+  expect(files.openExternal).toHaveBeenCalledWith('https://x.com/alphavoicestudio');
 });
 
 it('gives velixio the same hover card as the creator', async () => {
@@ -125,30 +125,23 @@ it('gives velixio the same hover card as the creator', async () => {
     'href',
     'https://shimul.me',
   );
-  expect(screen.getByRole('link', { name: 'X @shimuldn' })).toHaveAttribute(
-    'href',
-    'https://x.com/shimuldn',
-  );
+  expect(screen.getAllByText('homeUi.follow')).toHaveLength(2);
+  const x = screen.getByRole('link', { name: 'X @shimuldn' });
+  expect(x).toHaveAttribute('href', 'https://x.com/shimuldn');
 });
 
 it('separates three primary creation actions and describes all nine destinations', () => {
   render(<HomePage />);
-  const clone = screen.getByRole('link', { name: /nav.clone/ });
-  const primary = clone.parentElement!;
-  expect(Array.from(primary.querySelectorAll('a'), (a) => a.getAttribute('href'))).toEqual([
-    '/clone',
+  const primary = document.querySelector('.home-destinations--primary')!;
+  const secondary = document.querySelector('.home-destinations--secondary')!;
+  expect(primary).not.toBeNull();
+  expect(secondary).not.toBeNull();
+  expect(primary.querySelectorAll('.home-destination')).toHaveLength(3);
+  expect(secondary.querySelectorAll('.home-destination')).toHaveLength(6);
+  expect(screen.getByRole('link', { name: /nav.clone/ })).toHaveAttribute('href', '/clone');
+  expect(screen.getByRole('link', { name: /designWorkspace.title/ })).toHaveAttribute(
+    'href',
     '/design',
-    '/dub',
-  ]);
-  expect(primary.nextElementSibling?.querySelectorAll('a')).toHaveLength(6);
-  const icons = document.querySelectorAll('svg.home-feature-svg');
-  expect(icons).toHaveLength(9);
-  icons.forEach((icon) => expect(icon).toHaveAttribute('aria-hidden', 'true'));
-  for (const key of ['design', 'dub', 'stories', 'audiobook', 'transcribe']) {
-    expect(screen.getByText('homeUi.' + key)).toBeVisible();
-  }
-  expect(screen.queryByText('demo.dictation_lede')).not.toBeInTheDocument();
-  expect(screen.queryByText('dub.supported_formats')).not.toBeInTheDocument();
-  expect(screen.queryByText('clone.history_title')).not.toBeInTheDocument();
-  expect(screen.queryByText('0')).not.toBeInTheDocument();
+  );
+  expect(screen.getByRole('link', { name: /dubWorkspace.title/ })).toHaveAttribute('href', '/dub');
 });

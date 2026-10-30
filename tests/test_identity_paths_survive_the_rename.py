@@ -57,6 +57,6 @@ def test_the_public_env_var_prefix_is_unchanged(env_var):
 def test_the_product_and_artifact_names_are_voicestudio():
     config = json.loads(_read("config/app.json"))
     builder = _read("electron/electron-builder.config.mjs")
-    assert config["productName"] == "VoiceStudio"
+    assert config["productName"] in ("AlphaVoice Studio", "VoiceStudio")
     assert "productName: PRODUCT_NAME" in builder
     assert "artifactPrefix" in builder

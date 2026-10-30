@@ -1,30 +1,30 @@
 {
   "schemaVersion": 1,
   "identity": {
-    "productName": "VoiceStudio",
-    "applicationId": "com.voicestudio.desktop",
-    "publisherLegalName": "Yupcha Softwares Private Limited",
+    "productName": "AlphaVoice Studio",
+    "applicationId": "com.alphavoice.studio",
+    "publisherLegalName": "AlphaVoice Technologies",
     "license": "AGPL-3.0-only",
     "defaultLocale": "en-US"
   },
   "listing": {
-    "title": "VoiceStudio",
-    "shortDescription": "Local voice cloning, voice design, dubbing and dictation on your computer.",
-    "description": "VoiceStudio is a local-first desktop studio for voice cloning, voice design, video dubbing, transcription and real-time dictation. Audio and projects remain on the user's computer by default, with no account or API key required. Models and the managed runtime are installed only through explicit setup or model-install actions.",
+    "title": "AlphaVoice Studio",
+    "shortDescription": "Professional local voice cloning, voice design, dubbing and dictation studio.",
+    "description": "AlphaVoice Studio is a professional local-first desktop studio for voice cloning, voice design, video dubbing, transcription and real-time dictation. Audio and projects remain securely on the user's computer by default, with no mandatory cloud accounts or external API keys required.",
     "keywords": [
       "voice cloning",
       "text to speech",
       "dubbing",
       "dictation",
       "transcription",
-      "audio"
+      "audio production"
     ]
   },
   "urls": {
-    "website": "https://voicestudio.sh",
-    "privacyPolicy": "https://voicestudio.sh/privacy",
-    "support": "https://github.com/debpalash/VoiceStudio/issues",
-    "source": "https://github.com/debpalash/VoiceStudio"
+    "website": "https://alphavoice.studio",
+    "privacyPolicy": "https://alphavoice.studio/privacy",
+    "support": "https://alphavoice.studio/support",
+    "source": "https://github.com/alphavoice/AlphaVoice"
   },
   "requirements": {
     "diskGib": 10,
@@ -48,12 +48,7 @@
   "contentDeclarations": {
     "generativeAi": true,
     "voiceCloning": true,
-    "syntheticAudioWatermarking": true,
-    "publicUserContentHosting": false
-  },
-  "categories": {
-    "microsoft-store": "Music",
-    "snap-store": "Audio & Video",
-    "mac-app-store": "Productivity"
+    "cloudProcessing": false,
+    "backgroundLocation": false
   }
 }
