@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate } from '@tanstack/react-router';
 import {
   ArrowRightIcon,
@@ -15,7 +15,7 @@ import { Input } from '@/components/ui/input';
 import { getWebsiteApiUrl, setWebsiteSession, useWebsiteAuth } from '@/lib/store/website-auth-store';
 
 interface AuthPageProps {
-  initialMode?: 'login' | 'register' | 'forgot';
+  initialMode?: 'login' | 'register' | 'forgot' | 'reset';
 }
 
 export function WebsiteAuthPage({ initialMode = 'login' }: AuthPageProps) {
@@ -31,6 +31,18 @@ export function WebsiteAuthPage({ initialMode = 'login' }: AuthPageProps) {
   const [resetToken, setResetToken] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+
+  // Parse reset token from URL if available
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const urlToken = params.get('token');
+      if (urlToken) {
+        setResetToken(urlToken);
+        setMode('reset');
+      }
+    }
+  }, []);
 
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);

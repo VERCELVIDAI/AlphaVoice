@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'rea
 import { useTranslation } from 'react-i18next';
 import { KeyRoundIcon } from 'lucide-react';
 import { exchangeApiKey } from '@shared/api/authSession';
+import { isAuthExemptPath } from '@shared/web-api-routing';
 import { absoluteApiBase, ApiError, apiFetch } from '@/lib/api/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,19 +14,7 @@ export function WebAuthGate({ children }: { children: ReactNode }) {
   const { t } = useTranslation();
   const isPublicRoute =
     typeof window !== 'undefined' &&
-    (window.location.pathname === '/' ||
-      window.location.pathname === '/website' ||
-      window.location.pathname.startsWith('/features') ||
-      window.location.pathname.startsWith('/pricing') ||
-      window.location.pathname.startsWith('/download') ||
-      window.location.pathname.startsWith('/docs') ||
-      window.location.pathname.startsWith('/about') ||
-      window.location.pathname.startsWith('/contact') ||
-      window.location.pathname.startsWith('/login') ||
-      window.location.pathname.startsWith('/register') ||
-      window.location.pathname.startsWith('/forgot-password') ||
-      window.location.pathname.startsWith('/account') ||
-      window.location.pathname.startsWith('/admin/website'));
+    isAuthExemptPath(window.location.pathname);
 
   const [checked, setChecked] = useState(!__WEB_DEPLOYMENT__ || isPublicRoute);
   const [mode, setMode] = useState<AuthMode | null>(null);

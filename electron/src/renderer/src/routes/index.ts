@@ -69,6 +69,7 @@ const PublicLicensePage = lazyRouteComponent(() => import('@/features/website/we
 const PublicLoginPage = lazyRouteComponent(() => import('@/features/website/website-routes'), 'PublicLoginPage');
 const PublicRegisterPage = lazyRouteComponent(() => import('@/features/website/website-routes'), 'PublicRegisterPage');
 const PublicForgotPage = lazyRouteComponent(() => import('@/features/website/website-routes'), 'PublicForgotPage');
+const PublicResetPage = lazyRouteComponent(() => import('@/features/website/website-routes'), 'PublicResetPage');
 const PublicAccountPage = lazyRouteComponent(() => import('@/features/website/website-routes'), 'PublicAccountPage');
 const PublicAdminPage = lazyRouteComponent(() => import('@/features/website/website-routes'), 'PublicAdminPage');
 
@@ -370,6 +371,11 @@ export const forgotPasswordRoute = createRoute({
   path: '/forgot-password',
   component: PublicForgotPage,
 });
+export const resetPasswordRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/reset-password',
+  component: PublicResetPage,
+});
 export const accountPortalRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/account',
@@ -418,6 +424,7 @@ export const routeTree = rootRoute.addChildren([
   loginRoute,
   registerRoute,
   forgotPasswordRoute,
+  resetPasswordRoute,
   accountPortalRoute,
   adminWebsiteRoute,
   storageRoute,

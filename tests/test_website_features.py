@@ -379,3 +379,36 @@ def test_auth_validation_and_password_reset_flow(client):
     )
     assert new_login.status_code == 200
     assert "token" in new_login.json()
+
+
+def test_public_website_pages_routing():
+    from main import _is_public_path, _PUBLIC_PAGES
+
+    expected_routes = [
+        "/website",
+        "/features",
+        "/pricing",
+        "/download",
+        "/docs",
+        "/about",
+        "/contact",
+        "/terms",
+        "/privacy",
+        "/refund-policy",
+        "/delivery-policy",
+        "/license-agreement",
+        "/login",
+        "/register",
+        "/forgot-password",
+        "/reset-password",
+        "/account",
+        "/admin/website",
+        "/portal",
+        "/store",
+        "/pro",
+    ]
+    for route in expected_routes:
+        assert route in _PUBLIC_PAGES, f"Route {route} missing from _PUBLIC_PAGES"
+        assert _is_public_path(route), f"Route {route} not recognized as public path"
+        assert _is_public_path(f"{route}/"), f"Route {route}/ with trailing slash not recognized"
+        assert _is_public_path(f"{route}?token=123"), f"Route {route}?token=123 not recognized"

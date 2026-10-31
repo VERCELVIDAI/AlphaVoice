@@ -1776,11 +1776,20 @@ _PUBLIC_PAGES = {
     "/docs",
     "/about",
     "/contact",
+    "/terms",
+    "/privacy",
+    "/refund-policy",
+    "/delivery-policy",
+    "/license-agreement",
     "/login",
     "/register",
     "/forgot-password",
+    "/reset-password",
     "/account",
     "/admin/website",
+    "/portal",
+    "/store",
+    "/pro",
 }
 
 _PUBLIC_PREFIXES = (
@@ -1796,11 +1805,12 @@ def _is_public_path(path: str) -> bool:
     """HTTP paths every gate leaves reachable: the SPA shell and its assets,
     so a remote UI can load and say what is wrong, and the credential
     exchange, which validates the presented key itself."""
+    clean = path.split("?")[0].rstrip("/") or "/"
     return (
-        path in _SHELL_PATHS
-        or path in _PUBLIC_PAGES
-        or any(path.startswith(prefix) for prefix in _PUBLIC_PREFIXES)
-        or path == "/api/auth/session"
+        clean in _SHELL_PATHS
+        or clean in _PUBLIC_PAGES
+        or any(clean.startswith(prefix) for prefix in _PUBLIC_PREFIXES)
+        or clean == "/api/auth/session"
     )
 
 # Paths that answer while deferred startup is still running. The shutdown

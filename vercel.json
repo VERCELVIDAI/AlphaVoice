@@ -6,7 +6,7 @@
   "cleanUrls": false,
   "rewrites": [
     {
-      "source": "/((?!assets/|favicon\\.svg|early-error-capture\\.js|.*\\.[\\w]+$).*)",
+      "source": "/((?!assets/|.*\\.[a-zA-Z0-9]+$).*)",
       "destination": "/index.html"
     }
   ],

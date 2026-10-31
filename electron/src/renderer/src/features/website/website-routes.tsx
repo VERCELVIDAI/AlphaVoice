@@ -135,6 +135,14 @@ export function PublicForgotPage() {
   );
 }
 
+export function PublicResetPage() {
+  return (
+    <WebsiteLayout>
+      <WebsiteAuthPage initialMode="reset" />
+    </WebsiteLayout>
+  );
+}
+
 export function PublicAccountPage() {
   return (
     <WebsiteLayout>
