@@ -3,6 +3,8 @@ import { Link, useNavigate } from '@tanstack/react-router';
 import {
   ArrowRightIcon,
   CheckCircle2Icon,
+  EyeIcon,
+  EyeOffIcon,
   LockIcon,
   MailIcon,
   UserIcon,
@@ -28,6 +30,7 @@ export function WebsiteAuthPage({ initialMode = 'login' }: AuthPageProps) {
   const [company, setCompany] = useState('');
   const [resetToken, setResetToken] = useState('');
   const [newPassword, setNewPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -58,25 +61,41 @@ export function WebsiteAuthPage({ initialMode = 'login' }: AuthPageProps) {
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
+    const cleanEmail = email.trim().toLowerCase();
+    if (!cleanEmail || !cleanEmail.includes('@')) {
+      setErrorMsg('Please enter a valid email address.');
+      return;
+    }
+    if (!password) {
+      setErrorMsg('Please enter your account password.');
+      return;
+    }
+
     setLoading(true);
     setErrorMsg(null);
+    setSuccessMsg(null);
 
     try {
       const res = await fetch(getWebsiteApiUrl('/api/website/auth/login'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email: cleanEmail, password }),
       });
 
-      const data = await res.json();
+      const data = await res.json().catch(() => null);
       if (!res.ok) {
-        throw new Error(data.detail || 'Failed to sign in');
+        throw new Error(data?.detail || 'Invalid email or password. Please try again.');
       }
 
       setWebsiteSession(data.token, data.user);
       await navigate({ to: '/account' });
     } catch (err: unknown) {
-      setErrorMsg(err instanceof Error ? err.message : 'Login failed');
+      const msg = err instanceof Error ? err.message : 'Login failed';
+      if (msg.includes('Failed to fetch') || msg.includes('NetworkError')) {
+        setErrorMsg('Unable to connect to AlphaVoice backend service. Please verify your connection.');
+      } else {
+        setErrorMsg(msg);
+      }
     } finally {
       setLoading(false);
     }
@@ -84,25 +103,53 @@ export function WebsiteAuthPage({ initialMode = 'login' }: AuthPageProps) {
 
   async function handleRegister(e: React.FormEvent) {
     e.preventDefault();
+    const cleanEmail = email.trim().toLowerCase();
+    const cleanName = fullName.trim();
+    const cleanCompany = company.trim();
+
+    if (!cleanEmail || !cleanEmail.includes('@') || !cleanEmail.includes('.')) {
+      setErrorMsg('Please provide a valid email address.');
+      return;
+    }
+    if (cleanName.length < 2) {
+      setErrorMsg('Please enter your full name (minimum 2 characters).');
+      return;
+    }
+    if (password.length < 6) {
+      setErrorMsg('Password must be at least 6 characters long.');
+      return;
+    }
+
     setLoading(true);
     setErrorMsg(null);
+    setSuccessMsg(null);
 
     try {
       const res = await fetch(getWebsiteApiUrl('/api/website/auth/register'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password, full_name: fullName, company }),
+        body: JSON.stringify({
+          email: cleanEmail,
+          password,
+          full_name: cleanName,
+          company: cleanCompany,
+        }),
       });
 
-      const data = await res.json();
+      const data = await res.json().catch(() => null);
       if (!res.ok) {
-        throw new Error(data.detail || 'Registration failed');
+        throw new Error(data?.detail || 'Registration failed');
       }
 
       setWebsiteSession(data.token, data.user);
       await navigate({ to: '/account' });
     } catch (err: unknown) {
-      setErrorMsg(err instanceof Error ? err.message : 'Registration failed');
+      const msg = err instanceof Error ? err.message : 'Registration failed';
+      if (msg.includes('Failed to fetch') || msg.includes('NetworkError')) {
+        setErrorMsg('Unable to connect to AlphaVoice backend service. Please verify your connection.');
+      } else {
+        setErrorMsg(msg);
+      }
     } finally {
       setLoading(false);
     }
@@ -110,19 +157,30 @@ export function WebsiteAuthPage({ initialMode = 'login' }: AuthPageProps) {
 
   async function handleForgot(e: React.FormEvent) {
     e.preventDefault();
+    const cleanEmail = email.trim().toLowerCase();
+    if (!cleanEmail || !cleanEmail.includes('@')) {
+      setErrorMsg('Please enter a valid email address.');
+      return;
+    }
+
     setLoading(true);
     setErrorMsg(null);
+    setSuccessMsg(null);
 
     try {
       const res = await fetch(getWebsiteApiUrl('/api/website/auth/forgot-password'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email: cleanEmail }),
       });
 
-      const data = await res.json();
-      setSuccessMsg(data.message || 'Password reset link sent.');
-      if (data.debug_reset_token) {
+      const data = await res.json().catch(() => null);
+      if (!res.ok) {
+        throw new Error(data?.detail || 'Request failed');
+      }
+
+      setSuccessMsg(data?.message || 'Password reset link sent.');
+      if (data?.debug_reset_token) {
         setResetToken(data.debug_reset_token);
         setMode('reset');
       }
@@ -135,19 +193,31 @@ export function WebsiteAuthPage({ initialMode = 'login' }: AuthPageProps) {
 
   async function handleReset(e: React.FormEvent) {
     e.preventDefault();
+    const cleanToken = resetToken.trim();
+    if (!cleanToken) {
+      setErrorMsg('Reset token is required.');
+      return;
+    }
+    if (newPassword.length < 6) {
+      setErrorMsg('New password must be at least 6 characters long.');
+      return;
+    }
+
     setLoading(true);
     setErrorMsg(null);
+    setSuccessMsg(null);
 
     try {
       const res = await fetch(getWebsiteApiUrl('/api/website/auth/reset-password'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token: resetToken, new_password: newPassword }),
+        body: JSON.stringify({ token: cleanToken, new_password: newPassword }),
       });
 
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.detail || 'Reset failed');
-      setSuccessMsg('Your password has been successfully updated. Please sign in.');
+      const data = await res.json().catch(() => null);
+      if (!res.ok) throw new Error(data?.detail || 'Reset failed');
+      setSuccessMsg('Your password has been successfully updated. Please sign in with your new password.');
+      setPassword('');
       setMode('login');
     } catch (err: unknown) {
       setErrorMsg(err instanceof Error ? err.message : 'Password reset failed');
@@ -220,7 +290,11 @@ export function WebsiteAuthPage({ initialMode = 'login' }: AuthPageProps) {
                 <label className="text-xs font-medium text-muted-foreground">Password</label>
                 <button
                   type="button"
-                  onClick={() => setMode('forgot')}
+                  onClick={() => {
+                    setErrorMsg(null);
+                    setSuccessMsg(null);
+                    setMode('forgot');
+                  }}
                   className="text-[11px] text-primary hover:underline"
                 >
                   Forgot password?
@@ -230,12 +304,20 @@ export function WebsiteAuthPage({ initialMode = 'login' }: AuthPageProps) {
                 <LockIcon className="absolute left-3 top-2.5 size-4 text-muted-foreground" />
                 <Input
                   required
-                  type="password"
+                  type={showPassword ? 'text' : 'password'}
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="h-9 pl-9 text-xs"
+                  className="h-9 pl-9 pr-9 text-xs"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-2.5 text-muted-foreground hover:text-foreground"
+                  tabIndex={-1}
+                >
+                  {showPassword ? <EyeOffIcon className="size-4" /> : <EyeIcon className="size-4" />}
+                </button>
               </div>
             </div>
 
@@ -252,7 +334,11 @@ export function WebsiteAuthPage({ initialMode = 'login' }: AuthPageProps) {
               Don't have an account yet?{' '}
               <button
                 type="button"
-                onClick={() => setMode('register')}
+                onClick={() => {
+                  setErrorMsg(null);
+                  setSuccessMsg(null);
+                  setMode('register');
+                }}
                 className="font-semibold text-primary hover:underline"
               >
                 Register now
@@ -317,12 +403,20 @@ export function WebsiteAuthPage({ initialMode = 'login' }: AuthPageProps) {
                 <LockIcon className="absolute left-3 top-2.5 size-4 text-muted-foreground" />
                 <Input
                   required
-                  type="password"
+                  type={showPassword ? 'text' : 'password'}
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="h-9 pl-9 text-xs"
+                  className="h-9 pl-9 pr-9 text-xs"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-2.5 text-muted-foreground hover:text-foreground"
+                  tabIndex={-1}
+                >
+                  {showPassword ? <EyeOffIcon className="size-4" /> : <EyeIcon className="size-4" />}
+                </button>
               </div>
             </div>
 
@@ -339,7 +433,11 @@ export function WebsiteAuthPage({ initialMode = 'login' }: AuthPageProps) {
               Already have an account?{' '}
               <button
                 type="button"
-                onClick={() => setMode('login')}
+                onClick={() => {
+                  setErrorMsg(null);
+                  setSuccessMsg(null);
+                  setMode('login');
+                }}
                 className="font-semibold text-primary hover:underline"
               >
                 Sign in
@@ -379,7 +477,11 @@ export function WebsiteAuthPage({ initialMode = 'login' }: AuthPageProps) {
             <div className="text-center">
               <button
                 type="button"
-                onClick={() => setMode('login')}
+                onClick={() => {
+                  setErrorMsg(null);
+                  setSuccessMsg(null);
+                  setMode('login');
+                }}
                 className="text-xs text-primary hover:underline"
               >
                 &larr; Back to sign in
@@ -405,16 +507,26 @@ export function WebsiteAuthPage({ initialMode = 'login' }: AuthPageProps) {
 
             <div>
               <label className="mb-1 block text-xs font-medium text-muted-foreground">
-                New Password
+                New Password (min. 6 characters)
               </label>
-              <Input
-                required
-                type="password"
-                placeholder="••••••••"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                className="h-9 text-xs"
-              />
+              <div className="relative">
+                <Input
+                  required
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="••••••••"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  className="h-9 pr-9 text-xs"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-2.5 text-muted-foreground hover:text-foreground"
+                  tabIndex={-1}
+                >
+                  {showPassword ? <EyeOffIcon className="size-4" /> : <EyeIcon className="size-4" />}
+                </button>
+              </div>
             </div>
 
             <Button
@@ -422,8 +534,22 @@ export function WebsiteAuthPage({ initialMode = 'login' }: AuthPageProps) {
               disabled={loading}
               className="h-10 w-full text-xs font-semibold"
             >
-              {loading ? 'Updating...' : 'Set New Password'}
+              {loading ? 'Updating Password...' : 'Set New Password'}
             </Button>
+
+            <div className="text-center">
+              <button
+                type="button"
+                onClick={() => {
+                  setErrorMsg(null);
+                  setSuccessMsg(null);
+                  setMode('login');
+                }}
+                className="text-xs text-primary hover:underline"
+              >
+                &larr; Back to sign in
+              </button>
+            </div>
           </form>
         )}
       </div>

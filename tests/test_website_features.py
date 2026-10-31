@@ -273,3 +273,109 @@ def test_spa_client_side_routing_fallback(client):
     # Non-existent asset with extension should 404
     missing_asset_res = client.get("/assets/nonexistent_bundle_12345.js")
     assert missing_asset_res.status_code == 404
+
+
+def test_auth_validation_and_password_reset_flow(client):
+    import time
+    timestamp = int(time.time() * 1000)
+    test_email = f"test_user_{timestamp}@alphavoice.test"
+
+    # 1. Registration validation failures
+    res_bad_email = client.post(
+        "/api/website/auth/register",
+        json={"email": "notanemail", "password": "validPass123", "full_name": "Test User"},
+    )
+    assert res_bad_email.status_code == 400
+
+    res_short_pwd = client.post(
+        "/api/website/auth/register",
+        json={"email": test_email, "password": "123", "full_name": "Test User"},
+    )
+    assert res_short_pwd.status_code in (400, 422)
+
+    # 2. Successful registration
+    reg_res = client.post(
+        "/api/website/auth/register",
+        json={
+            "email": test_email,
+            "password": "InitialPassword123!",
+            "full_name": "Test Auth User",
+            "company": "Audio Works",
+        },
+    )
+    assert reg_res.status_code == 200
+    data = reg_res.json()
+    assert "token" in data
+    assert data["user"]["email"] == test_email
+    assert data["user"]["full_name"] == "Test Auth User"
+
+    # 3. Duplicate registration should return 400
+    res_dup = client.post(
+        "/api/website/auth/register",
+        json={
+            "email": test_email,
+            "password": "AnotherPassword123!",
+            "full_name": "Duplicate User",
+        },
+    )
+    assert res_dup.status_code == 400
+    assert "already exists" in res_dup.json()["detail"].lower()
+
+    # 4. Login validation
+    res_bad_login = client.post(
+        "/api/website/auth/login",
+        json={"email": test_email, "password": "WrongPassword999!"},
+    )
+    assert res_bad_login.status_code == 401
+
+    res_good_login = client.post(
+        "/api/website/auth/login",
+        json={"email": test_email, "password": "InitialPassword123!"},
+    )
+    assert res_good_login.status_code == 200
+    assert "token" in res_good_login.json()
+
+    # 5. Forgot Password & Reset Password Workflow
+    forgot_res = client.post(
+        "/api/website/auth/forgot-password",
+        json={"email": test_email},
+    )
+    assert forgot_res.status_code == 200
+    reset_token = forgot_res.json().get("debug_reset_token")
+    assert reset_token and reset_token.startswith("rst_")
+
+    # Reset with invalid token
+    invalid_reset = client.post(
+        "/api/website/auth/reset-password",
+        json={"token": "rst_fakeinvalidtoken12345", "new_password": "NewUpdatedPassword456!"},
+    )
+    assert invalid_reset.status_code == 400
+
+    # Reset with valid token
+    valid_reset = client.post(
+        "/api/website/auth/reset-password",
+        json={"token": reset_token, "new_password": "NewUpdatedPassword456!"},
+    )
+    assert valid_reset.status_code == 200
+
+    # Token cannot be reused
+    reused_reset = client.post(
+        "/api/website/auth/reset-password",
+        json={"token": reset_token, "new_password": "AnotherAttempt123!"},
+    )
+    assert reused_reset.status_code == 400
+
+    # Old password no longer works
+    old_login = client.post(
+        "/api/website/auth/login",
+        json={"email": test_email, "password": "InitialPassword123!"},
+    )
+    assert old_login.status_code == 401
+
+    # New password works
+    new_login = client.post(
+        "/api/website/auth/login",
+        json={"email": test_email, "password": "NewUpdatedPassword456!"},
+    )
+    assert new_login.status_code == 200
+    assert "token" in new_login.json()

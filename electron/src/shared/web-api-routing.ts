@@ -5,7 +5,7 @@ export function joinApiPath(base: string, path: string): string {
 /** Vite's `/api` is a transport prefix except for backend routers that
  * canonically own it. Electron main applies the same one-prefix rule. */
 export function rewriteDevApiProxyPath(path: string): string {
-  return /^\/api\/(settings|auth|integrations|mcp)(?:\/|$)/.test(path)
+  return /^\/api\/(settings|auth|integrations|mcp|website)(?:\/|$)/.test(path)
     ? path
     : path.replace(/^\/api/, '');
 }

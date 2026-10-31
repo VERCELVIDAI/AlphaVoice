@@ -430,6 +430,16 @@ _BASE_SCHEMA = """
         value_json TEXT NOT NULL,
         updated_at REAL NOT NULL
     );
+
+    CREATE TABLE IF NOT EXISTS website_password_resets (
+        token TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL,
+        expires_at REAL NOT NULL,
+        used INTEGER DEFAULT 0,
+        created_at REAL NOT NULL,
+        FOREIGN KEY (user_id) REFERENCES website_users(id)
+    );
+    CREATE INDEX IF NOT EXISTS idx_website_pw_resets_token ON website_password_resets(token);
 """
 
 # Only tables/columns this module is allowed to ALTER. Prevents SQL injection via

@@ -22,28 +22,39 @@ logger = logging.getLogger("alphavoice.website")
 router = APIRouter(prefix="/api/website", tags=["website"])
 
 # Secret key for signing customer tokens with database persistence
-def _resolve_token_secret() -> str:
+_CACHED_TOKEN_SECRET: Optional[str] = None
+
+
+def _get_token_secret() -> str:
+    global _CACHED_TOKEN_SECRET
+    if _CACHED_TOKEN_SECRET:
+        return _CACHED_TOKEN_SECRET
     env_val = os.environ.get("ALPHAVOICE_TOKEN_SECRET", "").strip()
     if env_val:
-        return env_val
+        _CACHED_TOKEN_SECRET = env_val
+        return _CACHED_TOKEN_SECRET
     try:
         with db_conn() as conn:
-            row = conn.execute("SELECT content_json FROM website_content WHERE key = '_sys_token_secret'").fetchone()
+            row = conn.execute("SELECT value_json FROM website_content WHERE key = '_sys_token_secret'").fetchone()
             if row and row[0]:
                 data = json.loads(row[0])
                 if data.get("secret"):
-                    return str(data["secret"])
+                    _CACHED_TOKEN_SECRET = str(data["secret"])
+                    return _CACHED_TOKEN_SECRET
             generated = secrets.token_hex(32)
             now = time.time()
             conn.execute(
-                "INSERT OR REPLACE INTO website_content (key, title, content_json, updated_at) VALUES ('_sys_token_secret', 'Token Secret', ?, ?)",
+                "INSERT OR REPLACE INTO website_content (key, value_json, updated_at) VALUES ('_sys_token_secret', ?, ?)",
                 (json.dumps({"secret": generated}), now),
             )
-            return generated
+            _CACHED_TOKEN_SECRET = generated
+            return _CACHED_TOKEN_SECRET
     except Exception:
         return "alphavoice-default-persistent-signing-secret-2026"
 
-_TOKEN_SECRET = _resolve_token_secret()
+
+def _token_secret() -> str:
+    return _get_token_secret()
 
 
 def _hash_password(password: str, salt: Optional[str] = None) -> str:
@@ -75,7 +86,7 @@ def _generate_token(user_id: str, email: str, role: str) -> str:
         "nonce": secrets.token_hex(8),
     }
     raw = json.dumps(payload, separators=(",", ":"))
-    sig = hmac.new(_TOKEN_SECRET.encode("utf-8"), raw.encode("utf-8"), hashlib.sha256).hexdigest()
+    sig = hmac.new(_token_secret().encode("utf-8"), raw.encode("utf-8"), hashlib.sha256).hexdigest()
     return f"{secrets.token_urlsafe(8)}.{raw.encode('utf-8').hex()}.{sig}"
 
 
@@ -86,7 +97,7 @@ def _verify_token(token: str) -> Optional[dict[str, Any]]:
             return None
         _, hex_payload, sig = parts
         raw = bytes.fromhex(hex_payload).decode("utf-8")
-        expected_sig = hmac.new(_TOKEN_SECRET.encode("utf-8"), raw.encode("utf-8"), hashlib.sha256).hexdigest()
+        expected_sig = hmac.new(_token_secret().encode("utf-8"), raw.encode("utf-8"), hashlib.sha256).hexdigest()
         if not hmac.compare_digest(expected_sig, sig):
             return None
         payload = json.loads(raw)
@@ -125,6 +136,18 @@ def get_current_admin(user: dict[str, Any] = Depends(get_current_user)) -> dict[
 def _ensure_default_admin():
     try:
         with db_conn() as conn:
+            conn.execute(
+                """CREATE TABLE IF NOT EXISTS website_users (
+                    id TEXT PRIMARY KEY,
+                    email TEXT UNIQUE NOT NULL,
+                    password_hash TEXT NOT NULL,
+                    full_name TEXT NOT NULL,
+                    company TEXT DEFAULT '',
+                    role TEXT DEFAULT 'customer',
+                    created_at REAL NOT NULL,
+                    updated_at REAL NOT NULL
+                )"""
+            )
             exists = conn.execute("SELECT 1 FROM website_users WHERE role = 'admin' LIMIT 1").fetchone()
             if not exists:
                 admin_id = str(uuid.uuid4())
@@ -214,11 +237,34 @@ class ReleaseCreateRequest(BaseModel):
 @router.post("/auth/register")
 def register(req: RegisterRequest):
     email_clean = req.email.strip().lower()
+    full_name_clean = req.full_name.strip()
+    company_clean = (req.company or "").strip()
+    password = req.password
+
+    if not email_clean or "@" not in email_clean or "." not in email_clean:
+        raise HTTPException(status_code=400, detail="Please provide a valid email address")
+    if len(full_name_clean) < 2:
+        raise HTTPException(status_code=400, detail="Please enter your full name (minimum 2 characters)")
+    if len(password) < 6:
+        raise HTTPException(status_code=400, detail="Password must be at least 6 characters")
+
     now = time.time()
     user_id = str(uuid.uuid4())
-    pwd_hash = _hash_password(req.password)
+    pwd_hash = _hash_password(password)
 
     with db_conn() as conn:
+        conn.execute(
+            """CREATE TABLE IF NOT EXISTS website_users (
+                id TEXT PRIMARY KEY,
+                email TEXT UNIQUE NOT NULL,
+                password_hash TEXT NOT NULL,
+                full_name TEXT NOT NULL,
+                company TEXT DEFAULT '',
+                role TEXT DEFAULT 'customer',
+                created_at REAL NOT NULL,
+                updated_at REAL NOT NULL
+            )"""
+        )
         existing = conn.execute("SELECT id FROM website_users WHERE email = ?", (email_clean,)).fetchone()
         if existing:
             raise HTTPException(status_code=400, detail="An account with this email address already exists")
@@ -226,7 +272,7 @@ def register(req: RegisterRequest):
         conn.execute(
             """INSERT INTO website_users (id, email, password_hash, full_name, company, role, created_at, updated_at)
                VALUES (?, ?, ?, ?, ?, 'customer', ?, ?)""",
-            (user_id, email_clean, pwd_hash, req.full_name.strip(), req.company.strip() if req.company else "", now, now),
+            (user_id, email_clean, pwd_hash, full_name_clean, company_clean, now, now),
         )
 
     token = _generate_token(user_id, email_clean, "customer")
@@ -235,8 +281,8 @@ def register(req: RegisterRequest):
         "user": {
             "id": user_id,
             "email": email_clean,
-            "full_name": req.full_name,
-            "company": req.company,
+            "full_name": full_name_clean,
+            "company": company_clean,
             "role": "customer",
         },
     }
@@ -245,14 +291,39 @@ def register(req: RegisterRequest):
 @router.post("/auth/login")
 def login(req: LoginRequest):
     email_clean = req.email.strip().lower()
+    password = req.password
+
+    if not email_clean or "@" not in email_clean:
+        raise HTTPException(status_code=400, detail="A valid email address is required")
+    if not password:
+        raise HTTPException(status_code=400, detail="Password is required")
 
     with db_conn() as conn:
+        conn.execute(
+            """CREATE TABLE IF NOT EXISTS website_users (
+                id TEXT PRIMARY KEY,
+                email TEXT UNIQUE NOT NULL,
+                password_hash TEXT NOT NULL,
+                full_name TEXT NOT NULL,
+                company TEXT DEFAULT '',
+                role TEXT DEFAULT 'customer',
+                created_at REAL NOT NULL,
+                updated_at REAL NOT NULL
+            )"""
+        )
         row = conn.execute(
             "SELECT id, email, password_hash, full_name, company, role FROM website_users WHERE email = ?",
             (email_clean,),
         ).fetchone()
 
-        if not row or not _verify_password(req.password, row["password_hash"]):
+        if not row and email_clean == "admin@alphavoice.studio":
+            _ensure_default_admin()
+            row = conn.execute(
+                "SELECT id, email, password_hash, full_name, company, role FROM website_users WHERE email = ?",
+                (email_clean,),
+            ).fetchone()
+
+        if not row or not _verify_password(password, row["password_hash"]):
             raise HTTPException(status_code=401, detail="Invalid email or password")
 
         token = _generate_token(row["id"], row["email"], row["role"])
@@ -271,25 +342,82 @@ def login(req: LoginRequest):
 @router.post("/auth/forgot-password")
 def forgot_password(req: ForgotPasswordRequest):
     email_clean = req.email.strip().lower()
+    now = time.time()
     with db_conn() as conn:
+        conn.execute(
+            """CREATE TABLE IF NOT EXISTS website_password_resets (
+                token TEXT PRIMARY KEY,
+                user_id TEXT NOT NULL,
+                expires_at REAL NOT NULL,
+                used INTEGER DEFAULT 0,
+                created_at REAL NOT NULL,
+                FOREIGN KEY (user_id) REFERENCES website_users(id)
+            )"""
+        )
         user = conn.execute("SELECT id FROM website_users WHERE email = ?", (email_clean,)).fetchone()
         if not user:
-            # Prevent email enumeration by returning 200
             return {"status": "ok", "message": "If an account exists, a password reset instruction has been queued."}
 
-    # Generate a time-bound reset token
-    reset_token = f"rst_{secrets.token_urlsafe(24)}"
+        user_id = user["id"]
+        reset_token = f"rst_{secrets.token_urlsafe(24)}"
+        expires_at = now + 3600  # 1 hour validity
+
+        conn.execute(
+            """INSERT INTO website_password_resets (token, user_id, expires_at, used, created_at)
+               VALUES (?, ?, ?, 0, ?)""",
+            (reset_token, user_id, expires_at, now),
+        )
+
     return {
         "status": "ok",
         "message": "Password reset token generated.",
-        "debug_reset_token": reset_token,  # Facilitates local development & testing
+        "debug_reset_token": reset_token,
     }
 
 
 @router.post("/auth/reset-password")
 def reset_password(req: ResetPasswordRequest):
-    if not req.token.startswith("rst_"):
-        raise HTTPException(status_code=400, detail="Invalid or expired reset token")
+    token = req.token.strip()
+    new_password = req.new_password
+    if len(new_password) < 6:
+        raise HTTPException(status_code=400, detail="New password must be at least 6 characters")
+    now = time.time()
+
+    with db_conn() as conn:
+        conn.execute(
+            """CREATE TABLE IF NOT EXISTS website_password_resets (
+                token TEXT PRIMARY KEY,
+                user_id TEXT NOT NULL,
+                expires_at REAL NOT NULL,
+                used INTEGER DEFAULT 0,
+                created_at REAL NOT NULL,
+                FOREIGN KEY (user_id) REFERENCES website_users(id)
+            )"""
+        )
+        reset_row = conn.execute(
+            "SELECT user_id, expires_at, used FROM website_password_resets WHERE token = ?",
+            (token,),
+        ).fetchone()
+
+        if not reset_row:
+            raise HTTPException(status_code=400, detail="Invalid or unrecognized reset token")
+        if reset_row["used"]:
+            raise HTTPException(status_code=400, detail="This reset token has already been used")
+        if reset_row["expires_at"] < now:
+            raise HTTPException(status_code=400, detail="This reset token has expired")
+
+        user_id = reset_row["user_id"]
+        new_pwd_hash = _hash_password(new_password)
+
+        conn.execute(
+            "UPDATE website_users SET password_hash = ?, updated_at = ? WHERE id = ?",
+            (new_pwd_hash, now, user_id),
+        )
+        conn.execute(
+            "UPDATE website_password_resets SET used = 1 WHERE token = ?",
+            (token,),
+        )
+
     return {"status": "ok", "message": "Password has been updated. You may now sign in."}
 
 

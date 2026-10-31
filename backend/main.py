@@ -1788,6 +1788,7 @@ _PUBLIC_PREFIXES = (
     "/favicon",
     "/social/",
     "/api/website/",
+    "/website/",
 )
 
 
